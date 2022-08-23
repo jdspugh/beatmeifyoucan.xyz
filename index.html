@@ -1,0 +1,128 @@
+<style>
+  img {
+    height: 100%;
+  }
+
+  .r {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 3em;
+    align-items: center;
+  }
+
+  .r>div:first-child {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 3em;
+  }
+
+  .r>div:nth-child(2) {
+    display: block;
+  }
+
+  .r>div>div {
+    display: flex;
+    flex-direction: column;
+    height: 120px;
+    align-items: center;
+  }
+
+  .r>div>div:nth-child(2)>img {
+    transform: scaleX(-1);
+  }
+
+  .r>div>div {
+    font-size: 85%;
+  }
+
+  .c {
+    margin-bottom: 1em;
+  }
+
+  .k {
+    margin: 1em
+  }
+</style>
+
+<body style="font-family:sans-serif;text-align:center">
+  <div style="margin-bottom:1em">
+    <h1>Combat</h1>
+
+    Moves: (K)ick, (P)unch, (S)weep, (B)lock, (F)lying kick
+
+    <div style="margin:1em">
+      <div>
+        <label for="p1">Player1 Moves</label>
+        <input id="p1" />
+      </div>
+      <div>
+        <label for="p2">Player2 Moves</label>
+        <input id="p2" />
+      </div>
+    </div>
+
+    <input id="f" type="submit" value="Fight!" style="font-size:125%" />
+  </div>
+
+  <div id="r"></div>
+
+  <script>
+    const $ = s => document.querySelector(s); $$ = s => document.querySelectorAll(s), r = a => a[Math.random() * a.length | 0], sleep = m => new Promise(r => setTimeout(r, m)), f = async (s, m) => { await sleep(m * 1e3); $('#r').insertAdjacentHTML('beforeend', s); window.scrollTo(0, document.body.scrollHeight) }
+
+    const c = (a, b, c, d) => {
+      if (a == 'K' && b == 'K') return [-10, -10, 'Both players kicked each other in the head!']// 1/2 damage * 2
+      if (a == 'K' && b == 'P') return [0, -30, c + ' kicked ' + d + ' in the head while they were punching']
+      if (a == 'K' && b == 'S') return [-30, 0, d + ' swept ' + c + ' while they were kicking']
+      if (a == 'K' && b == 'B') return [0, 0, d + ' blocked ' + c + '\'s kick']
+      if (a == 'K' && b == 'F') return [0, -40, c + ' kicked ' + d + ' out of the air']
+
+      if (a == 'P' && b == 'P') return [-5, -5, 'Both players punched each other']// 1/2 damage * 2
+      if (a == 'P' && b == 'S') return [-10, 0, d + ' swept ' + c + ' while they were punching']
+      if (a == 'P' && b == 'B') return [0, 0, d + ' blocked ' + c + '\'s punch']
+      if (a == 'P' && b == 'F') return [-40, 0, d + ' flying kicked ' + c + ' in the head while they were punching']
+
+      if (a == 'S' && b == 'S') return [-10, -10, 'Both players swept each other']// 1/2 damage * 2
+      if (a == 'S' && b == 'B') return [0, -20, c + ' swept ' + d + ' while they were blocking']
+      if (a == 'S' && b == 'F') return [0, 0, d + ' flew over ' + c + '\'s sweep']
+
+      if (a == 'B' && b == 'B') return [10, 10, 'Both players defended and recovered some energy']// 1/2 damage * 2
+      if (a == 'B' && b == 'F') return [0, 0, c + ' blocked ' + d + '\'s flying kick']
+
+      if (a == 'F' && b == 'F') return [-20, -20, 'Both players flying kicked each other']// 1/2 damage * 2
+
+      return [0, 0, '']
+    }
+
+    const m = ['K', 'P', 'S', 'B', 'F']
+    const n = ['Kick', 'Punch', 'Sweep', 'Block', 'Flying Kick']
+    $('#p1').value = r(m) + r(m) + r(m) + r(m) + r(m) + r(m)
+    $('#p2').value = r(m) + r(m) + r(m) + r(m) + r(m) + r(m)
+
+    $('#f').addEventListener('click', async () => {
+      await f('<h2>Fighters ready!</h2>', 0)
+      await f('<h2>3</h2>', 4)
+      await f('<h2>2</h2>', 2)
+      await f('<h2>1</h2>', 2)
+      await f('<h2>Fight!</h2>', 2)
+      let s1 = 100, s2 = 100, s = '', r1, r2, d1, d2
+      const p1 = $('#p1').value, p2 = $('#p2').value
+      for (let i = 0; i < 6; i++) {
+        r1 = c(p1[i], p2[i], 'P1', 'P2')
+        r2 = c(p2[i], p1[i], 'P2', 'P1')
+        d1 = r1[0] + r2[1]
+        d2 = r1[1] + r2[0]
+        s1 += d1
+        s2 += d2
+        if (r1[2] == r2[2]) r2[2] = ''
+        await f(`<div class="r"><div><div><img src="${p1[i]}.png" />♥${s1}(${d1})<div>${n[m.indexOf(p1[i])]}</div></div><div><img src="${p2[i]}.png" />♥${s2}(${d2})<div>${n[m.indexOf(p2[i])]}</div></div></div><div>${r1[2]} ${r2[2]}</div></div>`, 0 == i ? 2 : 8)
+        if (s1 < 0 || s2 < 0) break
+      }
+      if (s1 < 0 || s2 < 0) {
+        await f(`<div class="k">${s1 == s2 ? 'Both players were knocked out!' : `Player ${s1 > s2 ? 2 : 1} was knocked out!`}</div>`, 2)
+      } else await f('<h2>End of match!</h2>', 2)
+      await f('Final result... ', 2)
+      await f(`♥${s1} ♥${s2}<br /><h2>${s1 == s2 ? 'Draw!' : ('Player ' + ((s1 > s2) ? 1 : 2) + ' Won!')}</h2>`, 2)
+    })
+
+  </script>
+</body>
