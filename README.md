@@ -4,8 +4,9 @@ Moralis + Cronos Hackathon Entry
 
 ## Files
 
-* index.html
-  * self contained local mutliplayer prototype of the gameplay for tesing and balancing
+* local-multiplayer-prototype
+  * index.html
+    * self contained local mutliplayer prototype of the gameplay for tesing and balancing
   
 ## TODO
 
