@@ -9,4 +9,4 @@ Moralis + Cronos Hackathon Entry
   
 ## TODO
 
-1. Create a client-server version of the prototype for gameplay testing with remote players
+1. Create game smartcontract
