@@ -28,16 +28,17 @@ contract Combat{
         if(g.b != msg.value) revert SendBetAmount();
 
         H[n].m2=moves;
-        if(g.m1 != g.m2) {
-            if(g.m1>g.m2) {
-                payable(g.a1).transfer(g.b*2);
-            } else {
-                payable(msg.sender).transfer(g.b);
-            }
+        if(g.m1 == moves) {
+            payable(g.a1).transfer(g.b);
+            payable(msg.sender).transfer(g.b);
+        } else {
+            payable((g.m1>moves)?g.a1:msg.sender).transfer(g.b*2);
         }
         emit Close(n, moves);
     }
-    // function balance() external view returns(uint256){
-    //     return address(this).balance;
-    // }
+    
+    // not needed:
+    function balance() external view returns(uint256) {
+        return address(this).balance;
+    }
 }
