@@ -6,13 +6,18 @@ pragma solidity ^0.8.16;
 // 0x0000000000000000 <-- salt (8 bytes)
 // 0x6bd2dd6bd408cbee33429358bf24fdc64612fbf8b1b4db604518f40ffd34b607 <-- keccak(m+salt) (32 bytes)
 
+// 0x5550 <-- PPPPPP (2 bytes)
+// 0x0000000000000000 <-- salt (8 bytes)
+// 0x629c819aa20b24ff482267ea2d92b0f9ad82c3cdb78fdbe1be3ca784aa81112a <-- keccak(m+salt) (32 bytes)
+
 // address 0x0000000000000000000000000000000000000000 <-- (20 bytes)
 // bytes32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff <-- (32 bytes)
 
 contract Combat{
     // consts
-    bytes32 constant MOVE_EMPTY = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     uint8 constant ROUNDS = 6;
+    uint16 constant EMPTY_MOVE = 0xffff;
+    bytes32 constant EMPTY_ENCRYPTED_MOVE = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     // structs
     struct Game{
@@ -22,15 +27,15 @@ contract Combat{
         bytes32 me2;// p2 encrypted moves <-- optimise by truncating generated hash
         address a1;// p1 address
         address a2;// p2 address <-- i.e. challenged person's address
-        uint24  d;//  duration (0=game already revealed)
+        uint24  d;//  duration (max 194 days), 0=game already revealed 
         uint16  m1;// p1 moves
         uint16  m2;// p2 moves
-    }// size = 32(t)+32(b)+32(m1)+32(m2)+20(a1)+20(a2)+3(d) = 32*4+20*2+3 = 171bytes = 6 slots @ 20k per slot + 1 slot for hash key = 7*20k = 140k gas per game stored = 140k * 10gwei today = 1400k gwei ~= $2 at bear market ~= $20 at bull market
+    }// size = 32+32+64+20+20+3+2+2 = 175 bytes = 6 slots @ 20k per slot + 1 slot for hash key = 7*20k = 140k gas per game stored = 140k * 10gwei today = 1400k gwei ~= $2 at bear market ~= $20 at bull market on Ethereum
     
     // variables
     Game[] public H;//TODO: make private
     address private deployer;
-    uint24 private duration = 10*60;// maximum game duration (seconds) after which it expires
+    uint24 private duration = 7*24*60*60;// 1 week. maximum game duration (seconds) after which it expires and players can claim their money
 
     // events
     event Open(bytes32 m1, uint256 bet, uint24 duration);//TODO: anonymous
@@ -38,9 +43,9 @@ contract Combat{
     event Cancel(uint32 n);//TODO: anonymous
 
     // debug events
-    event DebugByte32(bytes32 x);//TODO: anonymous + remove in production
-    event DebugAddress(address x);//TODO: anonymous + remove in production
-    event DebugUint256(uint256 x);//TODO: anonymous + remove in production
+    event DebugByte32(bytes32 x);//TODO: remove in production
+    event DebugAddress(address x);//TODO: remove in production
+    event DebugUint256(uint256 x);//TODO: remove in production
 
     // errors
     error ChooseOpenGame();// 1
@@ -60,15 +65,15 @@ contract Combat{
     function open(bytes32 encryptedMoves, address targetPlayer) external payable {
         H.push(Game({
             t:block.timestamp, b:msg.value,
-            me1:encryptedMoves, me2:MOVE_EMPTY,
+            me1:encryptedMoves, me2:EMPTY_ENCRYPTED_MOVE,
             a1:msg.sender, a2:targetPlayer, d:duration,
-            m1:0, m2:0
+            m1:EMPTY_MOVE, m2:EMPTY_MOVE
         }));
         emit Open(encryptedMoves, msg.value, duration);// timestamp can be gotten from block timestamp in event logs
     }
 
     function close(uint32 n, bytes32 encryptedMoves) external payable {
-        if(MOVE_EMPTY!=H[n].me2) revert ChooseOpenGame();
+        if(EMPTY_ENCRYPTED_MOVE!=H[n].me2) revert ChooseOpenGame();
         if(address(0)!=H[n].a2 && H[n].a2!=msg.sender) revert ChallengedPlayerMustClose();
         if(H[n].b != msg.value) revert SendBetAmount();
 
@@ -77,23 +82,23 @@ contract Combat{
     }
 
     function revealOpening(uint32 n,uint16 moves,uint64 salt) external {
-        if(MOVE_EMPTY==H[n].me2) revert CloseGameFirst();
+        if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
         if(H[n].me1!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
         H[n].m1=moves;
         payout(n);
     }
         
     function revealClose(uint32 n,uint16 moves,uint64 salt) external {
-        if(MOVE_EMPTY==H[n].me2) revert CloseGameFirst();
+        if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
         if(H[n].me2!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
         H[n].m2=moves;
         payout(n);
     }
 
     function payout(uint32 n) private {
-        if(0==H[n].m1 || 0==H[n].m2) return; // not all reveals revealed yet
+        if(EMPTY_MOVE==H[n].m1 || EMPTY_MOVE==H[n].m2) return; // not all reveals revealed yet
         if(0==H[n].d) revert GameAlreadyRevealed();
-        H[n].d=0; // make sure we only payout once
+        H[n].d=0; // make sure we only payout once (prevent reentrancy attack)
 
         uint256 w=ROUNDS;
         uint256 a=H[n].m1; uint256 b=H[n].m2;
@@ -113,13 +118,14 @@ contract Combat{
         //emit Reveal(n, m1, uint16(H[n].m2));
     }
 
-    // if both players haven't revealed, refund them both
-    // if one player only has revealed, give the money to them
-    // if both have revealed, do nothing
+    // if duration expired and
+    //    both players haven't revealed, refund them both
+    //    one player only has revealed, give the money to them
+    //    both have revealed, do nothing
     function cancel(uint32 n) external {
         emit DebugAddress(msg.sender);
         if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
-        if(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff==uint256(H[n].m2)) {
+        if(EMPTY_MOVE==uint256(H[n].m2)) {
             // P2 hasn't closed. Ok to send money back to P1.
 
             payable(H[n].a1).transfer(H[n].b);
