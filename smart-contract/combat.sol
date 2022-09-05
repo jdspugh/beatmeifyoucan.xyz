@@ -38,9 +38,9 @@ contract Combat{
     uint24 private duration = 7*24*60*60;// 1 week. maximum game duration (seconds) after which it expires and players can claim their money
 
     // events
-    event Open(bytes32 m1, uint256 bet, uint24 duration);//TODO: anonymous
-    event Reveal(uint32 n, uint16 m1, uint16 m2);//TODO: anonymous
-    event Cancel(uint32 n);//TODO: anonymous
+    event Open(uint24 duration) anonymous;//TODO: anonymous
+    event Reveal(uint32 n, uint16 m1, uint16 m2) anonymous;//TODO: anonymous
+    event Cancel(uint32 n) anonymous;//TODO: anonymous
 
     // debug events
     event DebugByte32(bytes32 x);//TODO: remove in production
@@ -69,7 +69,7 @@ contract Combat{
             a1:msg.sender, a2:targetPlayer, d:duration,
             m1:EMPTY_MOVE, m2:EMPTY_MOVE
         }));
-        emit Open(encryptedMoves, msg.value, duration);// timestamp can be gotten from block timestamp in event logs
+        emit Open(duration);// timestamp can be gotten from block timestamp in event logs
     }
 
     function close(uint32 n, bytes32 encryptedMoves) external payable {
