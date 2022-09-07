@@ -1,0 +1,12 @@
+<div class="error" style="color:blue"></div>
+<div style="display:flex;justify-content:center"><div class="error" style="color:green">Connect</div><div id="account"></div>
+  <div>Open Games<div id="open"></div></div>
+  <script src="https://unpkg.com/moralis-v1/dist/moralis.js"></script>
+  <script type="module">
+  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
+
+  Moralis.initialize('fL80rgQEZz1DQY7cbM5mvTrvhNEq9u9z20B7NQEH')
+  Moralis.serverURL='https://xqn6lnfa8zk5.usemoralis.com:2053/server'
+
+  console.log(await Moralis.Cloud.run('gamesOpen'))
+</script>
