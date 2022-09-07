@@ -28,6 +28,8 @@ Moralis + Cronos Hackathon Entry
 
 [ ] Frontend - Show challengers
 
-[ ] Backend - Colate games into MongoDB
+[x] Backend - Colate smartcontract events
+
+[ ] Backend - Colate games into Moralis DB
 
 [ ] Backend - Provide API to frontend
