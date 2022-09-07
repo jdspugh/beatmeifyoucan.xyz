@@ -1,4 +1,4 @@
-# Combat
+# BeatMeIfYouCan.xyz
 
 Moralis + Cronos Hackathon Entry
 
