@@ -1,12 +1,81 @@
-<div class="error" style="color:blue"></div>
-<div style="display:flex;justify-content:center"><div class="error" style="color:green">Connect</div><div id="account"></div>
-  <div>Open Games<div id="open"></div></div>
-  <script src="https://unpkg.com/moralis-v1/dist/moralis.js"></script>
+<style>
+  body{border-collapse:collapse}
+  h2{font-size:120%}
+  ul{display:table-row;padding:0;margin:0}
+  ul:first-child{font-weight:bold}
+  li{display:table-cell;border:1px solid;padding:6px 9px}
+  </style>
+  <body style="margin:1em;display:flex;justify-content:center">
+    <div style="width:100%;max-width:800px">
+  
+      <nav style="display:flex;justify-content:center;align-items:center;position:relative">
+        <h1>Beat Me If You Can</h1>
+        <div style="position:absolute;right:0">
+          <button id="login" style="display:none">Connect</button>
+          <div id="logout-container" style="display:flex">
+            <div id="user"></div>
+            <button id="logout">Disconnect</button>
+          </div>
+        </div>
+      </nav>
+  
+      <h2>Choose Your Opponent:</h2>
+      <div id="open"></div>
+  
+      <h2>Past Matches</h2>
+      <div id="closed"></div>
+  
+    </div>
+  <script src="https://unpkg.com/moralis-v1@1.11.0/dist/moralis.js"></script>
   <script type="module">
-  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
-
-  Moralis.initialize('fL80rgQEZz1DQY7cbM5mvTrvhNEq9u9z20B7NQEH')
-  Moralis.serverURL='https://xqn6lnfa8zk5.usemoralis.com:2053/server'
-
-  console.log(await Moralis.Cloud.run('gamesOpen'))
-</script>
+    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,a=a=>a.slice(0,4)+'&hellip;'+a.slice(-4),t=t=>{t=(Date.now()-t*1e3)/1e3/60;return (t>1440?`${t/1440|0 }days`:t>60?`${t/60|0} hours`:`${t|0} minutes`)+' ago'},b=w=>new Intl.NumberFormat(navigator.locale,{maximumSignificantDigits:3}).format(w/1e18)
+    let u
+  
+    const serverUrl='https://zwrgre5eepkc.usemoralis.com:2053/server'
+    const appId='l4EzyzLJgdwedW9y0Yjr7zV3ZJJQ6OWUp4guuUr3'
+    await Moralis.start({serverUrl,appId})
+    const M=Moralis
+    if('loading'!=document.readyState){refresh()}else document.addEventListener('DOMContentLoaded',refresh)
+  
+    $('#login').addEventListener('click',async()=>{
+      u=M.User.current()
+      D('u=',u)
+      try{
+        if(!u)u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'})
+        $('#user').innerText=u.get('ethAddress')
+      }catch(e){D('e=',e)}
+      D('u=',u)
+      refresh()
+    })
+    $('#logout').addEventListener('click',async()=>{
+      await Moralis.User.logOut()
+      $('#user').innerText=''
+      refresh()
+    })
+  
+    let q,r
+    const Game = Moralis.Object.extend('Game')
+    q=new Moralis.Query(Game)
+    q.equalTo('a2','0x0000000000000000000000000000000000000000')
+    r=await q.find()
+    $('#open').innerHTML='<ul><li>Time</li><li>Player 1</li><li>Bet CRO</li></ul>'+r.map(g=>`<ul><li>${t(g.get('t'))}</li> <li>${a(g.get('a1'))}</li> <li>${b(g.get('b'))}</li></ul>`).join('')
+    q=new Moralis.Query(Game)
+    q.notEqualTo('a2','0x0000000000000000000000000000000000000000')
+    q.notEqualTo('m1','65535')
+    q.notEqualTo('m2','65535')
+    r=await q.find()
+    $('#closed').innerHTML='<ul><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Bet CRO</li></ul>'+r.map(g=>`<ul><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li>${g.get('m1')}</li><li>${g.get('m2')}</li><li>${b(g.get('b'))}</li></ul>`).join('')
+  
+    async function refresh(){
+      u=M?M.User.current():null
+      $('#login').style.display=u?'none':'block'
+      $('#logout-container').style.display=u?'flex':'none'
+      if(u){
+        const a=u.get('ethAddress')
+        $('#user').innerText='123'+a(u.get('ethAddress'))
+        D('challengers',await M.Cloud.run('challengers',{a:a}))
+        D('challenged',await M.Cloud.run('challenged',{a:a}))
+      }
+    }
+  </script>
+  </body>
