@@ -1,81 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BeatMeIfYouCan.xyz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="beat-me-if-you-can-logo.png">
 <style>
-  body{border-collapse:collapse}
-  h2{font-size:120%}
-  ul{display:table-row;padding:0;margin:0}
-  ul:first-child{font-weight:bold}
-  li{display:table-cell;border:1px solid;padding:6px 9px}
-  </style>
-  <body style="margin:1em;display:flex;justify-content:center">
-    <div style="width:100%;max-width:800px">
-  
-      <nav style="display:flex;justify-content:center;align-items:center;position:relative">
-        <h1>Beat Me If You Can</h1>
-        <div style="position:absolute;right:0">
-          <button id="login" style="display:none">Connect</button>
-          <div id="logout-container" style="display:flex">
-            <div id="user"></div>
-            <button id="logout">Disconnect</button>
-          </div>
+:root{--0:#090a06;--1:#3c3c3c;--2:#bbb;--3:#fff}
+html{background-color:#222;color:var(--2)}
+body{border-collapse:collapse}
+section{background-color:#000;border-radius:1em;padding:1em 2em 2em;display:flex;flex-direction:column;margin-bottom:30px}
+h1,h2{color:var(--3);font-family:sans-serif}
+h1{font-size:200%;color:#fc1}
+h2{font-size:120%;text-transform:uppercase}
+p{margin:0 0 1em}
+.match ul{display:table-row;padding:0;margin:0}
+.match ul:first-child{font-weight:bold}
+.match li{display:table-cell;padding:6px 9px}
+.match ul:hover{background-color:#332}
+.match ul:first-child:hover{background-color:inherit}
+button{border:2px solid;border-color:inherit;background-color:#320;color:#c70;border-radius:9px;line-height:26px;padding:0 11px;text-transform:uppercase}
+button:hover{filter:brightness(2)}
+input{width:5em;margin-right:6px;background-color:#023;border:1px solid;border-color:inherit;height:21px;color:#8ef;padding:4px 7px}
+.p1,.p2{color:#a47437}.p1{filter:hue-rotate(306deg)}.p2{filter:hue-rotate(175deg)}
+input{background-color:#320;color:#c70}
+.pill{margin-right:6px;background-color:var(--1);padding:4px 8px;border-radius:9px}
+</style>
+</head>
+
+<body style="margin:1em;display:flex;justify-content:center">
+  <div style="width:100%;max-width:856px">
+
+    <nav style="display:flex;justify-content:space-between;align-items:center;position:relative">
+      <div style="display:flex;align-items:center">
+        <img src="beat-me-if-you-can-logo.png" alt="BeatMeIfYouCan.xys Logo" style="height:80px;margin-right:7px"/>
+        <h1>BeatMeIfYouCan.xyz</h1>
+      </div>
+      <div>
+        <button id="login" style="display:none">Connect</button>
+        <div id="logout-container" style="display:flex">
+          <div id="balance" class="pill" style="margin-right:6px"></div>
+          <div id="address" class="pill" style="margin-right:6px"></div>
+          <button id="logout">Disconnect</button>
         </div>
-      </nav>
-  
-      <h2>Choose Your Opponent:</h2>
-      <div id="open"></div>
-  
+      </div>
+    </nav>
+
+    <section>
+      <h2>How to Play</h2>
+      <p>
+        This is a classic game of Rock-Paper-Scissors that can be played against other player on the blockchain.
+      </p>
+      <p>
+        Game progress through 3 stages. First the players submit their encrypted moves to the blockchain. Once the encrypted moves are safetly stored on the blockchain they can be revealed by sending the unencrypted moves and the move encryption keys. Once both players have revealed the smart contract will determine the winner according to the classic rules or Rock-Paper-Scissors and send any bet amount to the winning player.
+      <p>
+        The quickest way to get started is to close some matches in the "Close a Match" section.
+        You can also open a match in the "Open a Match" section, in which case you will need to wait for a challenger to close your match with their moves.
+      </p>
+    </section>
+
+    <section style="width:413px">
+      <h2>Open a Match</h2>
+      <div class="p1">Moves <input />Bet <input />CRO <button>Open Match</button></div>
+    </section>
+
+    <section style="width:587px">
+      <h2>Close a Match</h2>
+      To close a match:
+      <ol>
+        <li>Enter 6 Rock/Scissor/Paper moves in the "Your Moves" area by hitting the R,P,S keys</li>
+        <li>Hit the "Fight!" button</li>
+        <li>Sign your transaction using your crypto wallet (such as MetaMask)</li>
+      </ol>
+      <div class="match" id="open"></div>
+    </section>
+
+    <section>
+      <h2>Matches in Progress</h2>
+      <div class="match" id="waiting"></div>
+    </section>
+
+    <section>
       <h2>Past Matches</h2>
-      <div id="closed"></div>
-  
-    </div>
-  <script src="https://unpkg.com/moralis-v1@1.11.0/dist/moralis.js"></script>
-  <script type="module">
-    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,a=a=>a.slice(0,4)+'&hellip;'+a.slice(-4),t=t=>{t=(Date.now()-t*1e3)/1e3/60;return (t>1440?`${t/1440|0 }days`:t>60?`${t/60|0} hours`:`${t|0} minutes`)+' ago'},b=w=>new Intl.NumberFormat(navigator.locale,{maximumSignificantDigits:3}).format(w/1e18)
-    let u
-  
-    const serverUrl='https://zwrgre5eepkc.usemoralis.com:2053/server'
-    const appId='l4EzyzLJgdwedW9y0Yjr7zV3ZJJQ6OWUp4guuUr3'
-    await Moralis.start({serverUrl,appId})
-    const M=Moralis
-    if('loading'!=document.readyState){refresh()}else document.addEventListener('DOMContentLoaded',refresh)
-  
-    $('#login').addEventListener('click',async()=>{
-      u=M.User.current()
-      D('u=',u)
-      try{
-        if(!u)u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'})
-        $('#user').innerText=u.get('ethAddress')
-      }catch(e){D('e=',e)}
-      D('u=',u)
-      refresh()
-    })
-    $('#logout').addEventListener('click',async()=>{
-      await Moralis.User.logOut()
-      $('#user').innerText=''
-      refresh()
-    })
-  
-    let q,r
-    const Game = Moralis.Object.extend('Game')
-    q=new Moralis.Query(Game)
-    q.equalTo('a2','0x0000000000000000000000000000000000000000')
-    r=await q.find()
-    $('#open').innerHTML='<ul><li>Time</li><li>Player 1</li><li>Bet CRO</li></ul>'+r.map(g=>`<ul><li>${t(g.get('t'))}</li> <li>${a(g.get('a1'))}</li> <li>${b(g.get('b'))}</li></ul>`).join('')
-    q=new Moralis.Query(Game)
-    q.notEqualTo('a2','0x0000000000000000000000000000000000000000')
-    q.notEqualTo('m1','65535')
-    q.notEqualTo('m2','65535')
-    r=await q.find()
-    $('#closed').innerHTML='<ul><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Bet CRO</li></ul>'+r.map(g=>`<ul><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li>${g.get('m1')}</li><li>${g.get('m2')}</li><li>${b(g.get('b'))}</li></ul>`).join('')
-  
-    async function refresh(){
-      u=M?M.User.current():null
-      $('#login').style.display=u?'none':'block'
-      $('#logout-container').style.display=u?'flex':'none'
-      if(u){
-        const a=u.get('ethAddress')
-        $('#user').innerText='123'+a(u.get('ethAddress'))
-        D('challengers',await M.Cloud.run('challengers',{a:a}))
-        D('challenged',await M.Cloud.run('challenged',{a:a}))
-      }
+      <div class="match" id="closed"></div>
+    </section>
+
+  </div>
+<script src="https://unpkg.com/moralis-v1@1.11.0/dist/moralis.js"></script>
+<script type="module">
+  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,a=a=>a.slice(0,5)+'&hellip;'+a.slice(-5),s=s=>s>1?'s':'',t=t=>{t=(Date.now()-t*1e3)/1e3/60;return (t>1440?`${t=t/1440|0} day${s(t)}`:t>60?`${t=t/60|0} hour${s(t)}`:`${t=t|0} minute${s(t)}`)+' ago'},b=w=>new Intl.NumberFormat(navigator.locale,{maximumSignificantDigits:3}).format(w/1e18)+' CRO',m=n=>{let s='';for(let i=6;i--;)s+=`&#999${4+(n&3)};`,n>>=2;return s},w=(m1,m2)=>{let s=0;for(let i=6;i--;){let p1=m1&3,p2=m2&3;if(p1!=p2){s+=p1==(p2+1)%3?1:-1};m1>>=2;m2>>=2};return s}
+  const serverUrl='https://zwrgre5eepkc.usemoralis.com:2053/server',appId='l4EzyzLJgdwedW9y0Yjr7zV3ZJJQ6OWUp4guuUr3',M=Moralis,G=M.Object.extend('Game'),Z='0x0000000000000000000000000000000000000000',N='65535'
+
+  let u,r
+
+  await M.start({serverUrl,appId})
+
+  $('#login').addEventListener('click',async()=>{
+    u=M.User.current()
+    if(!u)u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'})
+    refresh()
+  })
+  $('#logout').addEventListener('click',async()=>{await M.User.logOut();refresh()})
+
+  r=await(new M.Query(G)).equalTo('a2',Z).descending('t').find()
+  $('#open').innerHTML='<ul><li>Match</li><li>Time</li><li>Player 1</li><li>Bet</li><li class="p2">Your Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${g.get('n')}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input maxlength="6" /><button>Fight!</button></li></ul>`).join('')
+  setInterval(()=>{$$('input').forEach(e=>e.value=e.value.toUpperCase().split('').filter(c=>'RPS'.includes(c)).join(''))},100)
+
+  r=await(M.Query.or(
+   (new M.Query(G)).notEqualTo('a1',Z).notEqualTo('a2',Z).equalTo('m1',N),
+   (new M.Query(G)).notEqualTo('a1',Z).notEqualTo('a2',Z).equalTo('m2',N)
+  )).find()
+  $('#waiting').innerHTML='<ul><li>Match</li><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Bet</li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return `<ul><li>${g.get('n')}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${N==m1?'?':m(m1)}</li><li class="p2">${N==m2?'?':m(m2)}</li><li>${b(g.get('b'))}</li></ul>`}).join('')
+
+  r=await(new M.Query(G)).notEqualTo('a2',Z).notEqualTo('m1',N).notEqualTo('m2',N).descending('t').find()
+  $('#closed').innerHTML='<ul><li>Match</li><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Winnings</li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return `<ul><li>${g.get('n')}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${m(m1)} ${p>0?'+':''+p}</li><li class="p2">${m(m2)} ${p>0?'':'+'+(-p)}</li><li>${b(g.get('b'))}</li></ul>`}).join('')
+
+  if('loading'!=document.readyState){refresh()}else document.addEventListener('DOMContentLoaded',refresh)
+  async function refresh(){
+    u=M?M.User.current():null
+    $('#login').style.display=u?'none':'block'
+    $('#logout-container').style.display=u?'flex':'none'
+    if(u){
+      $('#balance').innerText=b((await M.Web3API.account.getNativeBalance()).balance)
+      const e=u.get('ethAddress')
+      $('#address').innerHTML=a(e)
+      D('challengers',await M.Cloud.run('challengers',{a:e}))
+      D('challenged',await M.Cloud.run('challenged',{a:e}))
     }
-  </script>
-  </body>
+  }
+</script>
+</body>
