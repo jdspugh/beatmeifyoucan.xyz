@@ -14,9 +14,9 @@ Moralis + Cronos Hackathon Entry
 
 [x] Frontend - Wallet connect
 
-[ ] Frontend - Lobby - Open games list
+[x] Frontend - Lobby - Open games list
 
-[ ] Frontend - Open game
+[x] Frontend - Open game
 
 [ ] Frontend - Close game
 
@@ -30,6 +30,6 @@ Moralis + Cronos Hackathon Entry
 
 [x] Backend - Colate smartcontract events
 
-[ ] Backend - Colate games into Moralis DB
+[x] Backend - Colate games into Moralis DB
 
-[ ] Backend - Provide API to frontend
+[x] Backend - Provide API to frontend
