@@ -2,16 +2,17 @@
 //SPDX-FileCopyrightText: 2022 Jonathan Pugh <jdspugh@gmail.com>
 pragma solidity ^0.8.16;
 
-// 0x0000 <-- RRRRRR (2 bytes)
-// 0x0000000000000000 <-- salt (8 bytes)
-// 0x6bd2dd6bd408cbee33429358bf24fdc64612fbf8b1b4db604518f40ffd34b607 <-- keccak(m+salt) (32 bytes)
-
-// 0x5550 <-- PPPPPP (2 bytes)
-// 0x0000000000000000 <-- salt (8 bytes)
-// 0x629c819aa20b24ff482267ea2d92b0f9ad82c3cdb78fdbe1be3ca784aa81112a <-- keccak(m+salt) (32 bytes)
-
 // address 0x0000000000000000000000000000000000000000 <-- (20 bytes)
-// bytes32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff <-- (32 bytes)
+
+//   0x0000 <-- RRRRRR
+// + 0x000000000000000000000000000000000000 <-- salt
+// = 0x0000000000000000000000000000000000000000 <-- moves + salt
+// 0x5380c7b7ae81a58eb98d9c78de4a1fd7fd9535fc953ed2be602daaa41767312a <-- keccak256(moves+salt)
+
+//   0x0555 <-- PPPPPP
+// + 0x000000000000000000000000000000000000 <-- salt
+// = 0x0555000000000000000000000000000000000000 <-- moves + salt
+// 0xbb632fa90c78a2a4290140edb5803ae8c03ba8cfc1a3af523b974af9e7951fd0 <-- keccak256(moves+salt)
 
 contract Combat{
     // consts
@@ -27,25 +28,27 @@ contract Combat{
         bytes32 me2;// p2 encrypted moves <-- optimise by truncating generated hash
         address a1;// p1 address
         address a2;// p2 address <-- i.e. challenged person's address
-        uint24  d;//  duration (max 194 days), 0=game already revealed 
+        uint24  d;//  duration (max 194 days), 0=game already revealed  <-- optimise by using hours instead of seconds
         uint16  m1;// p1 moves
         uint16  m2;// p2 moves
     }// size = 32+32+64+20+20+3+2+2 = 175 bytes = 6 slots @ 20k per slot + 1 slot for hash key = 7*20k = 140k gas per game stored = 140k * 10gwei today = 1400k gwei ~= $2 at bear market ~= $20 at bull market on Ethereum
     
     // variables
+    uint32 public count;
     Game[] public H;//TODO: make private
     address private deployer;
     uint24 private duration = 7*24*60*60;// 1 week. maximum game duration (seconds) after which it expires and players can claim their money
 
     // events
-    event Open(uint24 duration) anonymous;//TODO: anonymous
-    event Reveal(uint32 n, uint16 m1, uint16 m2) anonymous;//TODO: anonymous
-    event Cancel(uint32 n) anonymous;//TODO: anonymous
+    event Update(uint32 n);
+    // event Close(uint32 n);
+    // event Reveal(uint32 n);
+    // event Cancel(uint32 n);
 
-    // debug events
-    event DebugByte32(bytes32 x);//TODO: remove in production
-    event DebugAddress(address x);//TODO: remove in production
-    event DebugUint256(uint256 x);//TODO: remove in production
+    // // debug events
+    // event DebugByte32(bytes32 x);//TODO: remove in production
+    // event DebugAddress(address x);//TODO: remove in production
+    // event DebugUint256(uint256 x);//TODO: remove in production
 
     // errors
     error ChooseOpenGame();// 1
@@ -62,14 +65,16 @@ contract Combat{
     }
 
     // set targetPlayer to address(0) to create an open game
-    function open(bytes32 encryptedMoves, address targetPlayer) external payable {
+    function open(bytes32 encryptedMoves, address targetPlayer) external payable returns(uint32) {
         H.push(Game({
             t:block.timestamp, b:msg.value,
             me1:encryptedMoves, me2:EMPTY_ENCRYPTED_MOVE,
             a1:msg.sender, a2:targetPlayer, d:duration,
             m1:EMPTY_MOVE, m2:EMPTY_MOVE
         }));
-        emit Open(duration);// timestamp can be gotten from block timestamp in event logs
+        emit Update(count);
+        return count++;
+        //emit Open(duration);// timestamp can be gotten from block timestamp in event logs
     }
 
     function close(uint32 n, bytes32 encryptedMoves) external payable {
@@ -79,20 +84,25 @@ contract Combat{
 
         H[n].me2 = encryptedMoves;
         H[n].a2 = msg.sender;
+        emit Update(n);
     }
 
-    function revealOpening(uint32 n,uint16 moves,uint64 salt) external {
+    function revealOpening(uint32 n,uint16 moves,uint144 salt) external {
+        if(H[n].a1!=msg.sender) revert MustBePlayer();
         if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
         if(H[n].me1!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
         H[n].m1=moves;
         payout(n);
+        emit Update(n);
     }
         
-    function revealClose(uint32 n,uint16 moves,uint64 salt) external {
+    function revealClose(uint32 n,uint16 moves,uint144 salt) external {
+        if(H[n].a2!=msg.sender) revert MustBePlayer();
         if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
         if(H[n].me2!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
         H[n].m2=moves;
         payout(n);
+        emit Update(n);
     }
 
     function payout(uint32 n) private {
@@ -104,36 +114,55 @@ contract Combat{
         uint256 a=H[n].m1; uint256 b=H[n].m2;
         for(uint256 i=ROUNDS; i>0; i--){
             uint256 c=a&0x3; uint256 d=b&0x3;
-            if(c!=d)if((0==c && 2==d) || (1==c && 0==d) || (2==c && 1==d)){w++;}else{w--;}//0=R,1=P,2=S
+            //if(c!=d)if((0==c && 2==d) || (1==c && 0==d) || (2==c && 1==d)){w++;}else{w--;}//0=R,1=P,2=S
+            if(c!=d)if(c==(d+1)%3){w++;}else{w--;}//0=R,1=P,2=S
             a>>=2; b>>=2;
         }
+        payable(deployer).transfer(H[n].b*5/100);
         if(ROUNDS==w) {
             // draw
-            payable(H[n].a1).transfer(H[n].b);
-            payable(H[n].a2).transfer(H[n].b);
+            payable(H[n].a1).transfer(H[n].b*975/1000);
+            payable(H[n].a2).transfer(H[n].b*975/1000);
         } else {
             // win
-            payable(w>ROUNDS?H[n].a1:H[n].a2).transfer(H[n].b*2);
+            payable(w>ROUNDS?H[n].a1:H[n].a2).transfer(H[n].b*195/100);
         }
         //emit Reveal(n, m1, uint16(H[n].m2));
+        emit Update(n);
     }
 
-    // if duration expired and
-    //    both players haven't revealed, refund them both
-    //    one player only has revealed, give the money to them
-    //    both have revealed, do nothing
-    function cancel(uint32 n) external {
-        emit DebugAddress(msg.sender);
-        if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
-        if(EMPTY_MOVE==uint256(H[n].m2)) {
-            // P2 hasn't closed. Ok to send money back to P1.
+    // // if duration expired and
+    // //    both players haven't revealed, refund them both
+    // //    one player only has revealed, give the money to them
+    // //    both have revealed, do nothing
+    // function claim(uint32 n) external {
+    //     // emit DebugAddress(msg.sender);
+    //     if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
+    //     if(EMPTY_MOVE==uint256(H[n].m1) && EMPTY_MOVE==uint256(H[n].m2)) {
+    //         payable(H[n].a1).transfer(H[n].b);
+    //         H[n].a1=address(0);// don't let this happen more than once
+    //     }
+    //     // // Claim the prize money if the other player hasn't revealed after a certain amount of time
+    //     // //   or
+    //     // // Return the money to the original owners
+    //     emit Update(n);
+    // }
 
-            payable(H[n].a1).transfer(H[n].b);
-            H[n].a1=address(0);// don't let this happen more than once
+    function cancel(uint32 n) external {
+        if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
+        if(EMPTY_MOVE==uint256(H[n].m1) && EMPTY_MOVE==uint256(H[n].m2)) {
+            if(address(0)!=H[n].a1) {
+                address a = H[n].a1;
+                H[n].a1 = address(0);// prevent reentrancy
+                payable(a).transfer(H[n].b);
+            }
+            if(address(0)!=H[n].a2) {
+                address a = H[n].a2;
+                H[n].a2 = address(0);// prevent reentrancy
+                payable(a).transfer(H[n].b);
+            }
         }
-        // // Claim the prize money if the other player hasn't revealed after a certain amount of time
-        // //   or
-        // // Return the money to the original owners
+        emit Update(n);
     }
 
     function setDuration(uint24 d) external {
