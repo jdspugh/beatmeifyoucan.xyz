@@ -8,7 +8,7 @@ M.Cloud.afterSave('Update',async req=>{
   const n=req.object.get('n')
   //get game
   const w=new M.Web3(new M.Web3.providers.HttpProvider('https://evm-t3.cronos.org'))//testnet
-  //const w=new M.Web3(new M.Web3.providers.HttpProvider('https://public-cronos.w3node.com'))//rockx mainnet
+  //const w=new M.Web3(new M.Web3.providers.HttpProvider('https://public-cronos.w3node.com'))//mainnet
   L('w=')
   const c=new w.eth.Contract(CONTRACT.abi,CONTRACT.address)
   L('c=',c)
@@ -20,5 +20,5 @@ M.Cloud.afterSave('Update',async req=>{
   let g=gs[0]
   L('g=',g)
   if(!g)g=new Game()
-  await g.save({n:n,t:r.t,b:r.b,a1:r.a1,a2:r.a2,d:r.d,m1:r.m1,m2:r.m2})
+  await g.save({n:n,t:r.t,b:r.b,a1:r.a1.toLowerCase(),a2:r.a2.toLowerCase(),d:r.d,m1:r.m1,m2:r.m2})
 })

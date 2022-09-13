@@ -11,7 +11,9 @@ html{background-color:#222;color:var(--2)}
 body{border-collapse:collapse}
 section{background-color:#000;border-radius:1em;padding:1em 2em 2em;display:flex;flex-direction:column;margin-bottom:30px;width:fit-content;font-family:monospace;font-size:14px}
 h1,h2{color:var(--3);font-family:sans-serif}
-h1{font-size:200%;color:#fc1}
+h1{font-size:350%;font-family:'Neon Pixel-7';font-weight:normal}
+h1 span:nth-child(2n){color:#ff928a}
+h1 span:nth-child(2n+1){color:#38b3ff}
 h2{font-size:120%;text-transform:uppercase}
 p{margin:0 0 1em}
 .match{text-align:center}
@@ -20,9 +22,8 @@ p{margin:0 0 1em}
 .match li{display:table-cell;padding:6px 9px}
 .match ul:hover{background-color:#222}
 .match ul:first-child:hover{background-color:inherit}
-/* button{border:2px solid;border-color:inherit;background-color:#320;color:#c70;border-radius:9px;line-height:26px;padding:0 11px;text-transform:uppercase;opacity:.8} */
 button{border:2px solid;border-color:inherit;background-color:#222;color:#777;border-radius:9px;line-height:26px;padding:0 11px;text-transform:uppercase}
-button:hover{filter:brightness(2)}
+button:hover{filter:brightness(2);box-shadow:0 0 13px 0 #444}
 input{width:5em;margin-right:6px;background-color:#023;border:1px solid;border-color:inherit;height:21px;color:#8ef;padding:4px 7px}
 .p1,.p2{color:#a47437;white-space:nowrap}.p1{filter:hue-rotate(306deg)}.p2{filter:hue-rotate(175deg)}
 input{background-color:#320;color:#c70}
@@ -37,7 +38,7 @@ input{background-color:#320;color:#c70}
     <nav style="display:flex;justify-content:space-between;align-items:center;position:relative">
       <div style="display:flex;align-items:center">
         <img src="beat-me-if-you-can-logo.png" alt="BeatMeIfYouCan.xys Logo" style="height:80px;margin-right:7px"/>
-        <h1>BeatMeIfYouCan.xyz</h1>
+        <h1><span>Beat</span><span>Me</span><span>If</span><span>You</span><span>Can</span><span style="font-size:60%">.xyz</span></h1>
       </div>
       <div>
         <button id="login" style="display:none">Connect</button>
@@ -133,7 +134,7 @@ input{background-color:#320;color:#c70}
     }
 
     r=await(new M.Query(G)).equalTo('a2',Z).notEqualTo('a1',e).descending('t').find()
-    $('#open').innerHTML='<ul><li>Match</li><li>Time</li><li>Player 1</li><li>Bet</li><li class="p2">Player 2 Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${g.get('n')}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input class="moves" maxlength="6" /><button data-fight="${g.get('n')}">Fight!</button></li></ul>`).join('')
+    $('#open').innerHTML='<ul><li>Match</li><li>Time</li><li>Player 1</li><li>Bet</li><li>Player 2 Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${g.get('n')}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input class="moves" maxlength="6" /><button data-fight="${g.get('n')}">Fight!</button></li></ul>`).join('')
     setInterval(()=>{$$('.moves').forEach(e=>e.value=e.value.toUpperCase().split('').filter(c=>'RPS'.includes(c)).join(''))},100)
     $$('button[data-fight]').forEach(b=>b.addEventListener('click',e=>{
       let t=e.target,m=t.previousSibling.value
