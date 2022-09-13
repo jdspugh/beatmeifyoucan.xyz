@@ -1,4 +1,4 @@
-const CONTRACT={
+export const CONTRACT={
   address:'0x34d9203E34ACAcB6a612fFc274a146CfF75a553D',
   abi:[
 			{
