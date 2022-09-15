@@ -1,12 +1,12 @@
 export const CONTRACT={
-  address:'0xBB12203De4dc2Df6CD99315E177a445b854F2796',
+  address:'0x530A627CcFa29C5A14104d7161Bf9cC5BF33d088',
   abi:[
     {
       "inputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "n",
-          "type": "uint32"
+          "type": "uint256"
         }
       ],
       "name": "cancel",
@@ -32,9 +32,9 @@ export const CONTRACT={
     {
       "inputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "n",
-          "type": "uint32"
+          "type": "uint256"
         },
         {
           "internalType": "bytes32",
@@ -75,6 +75,11 @@ export const CONTRACT={
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "n",
+          "type": "uint256"
+        },
+        {
           "internalType": "bytes32",
           "name": "encryptedMoves",
           "type": "bytes32"
@@ -86,22 +91,16 @@ export const CONTRACT={
         }
       ],
       "name": "open",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
-        }
-      ],
+      "outputs": [],
       "stateMutability": "payable",
       "type": "function"
     },
     {
       "inputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "n",
-          "type": "uint32"
+          "type": "uint256"
         },
         {
           "internalType": "uint16",
@@ -122,9 +121,9 @@ export const CONTRACT={
     {
       "inputs": [
         {
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "n",
-          "type": "uint32"
+          "type": "uint256"
         },
         {
           "internalType": "uint16",
@@ -165,9 +164,9 @@ export const CONTRACT={
       "inputs": [
         {
           "indexed": false,
-          "internalType": "uint32",
+          "internalType": "uint256",
           "name": "n",
-          "type": "uint32"
+          "type": "uint256"
         }
       ],
       "name": "Update",
@@ -181,19 +180,6 @@ export const CONTRACT={
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "count",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
         }
       ],
       "stateMutability": "view",
