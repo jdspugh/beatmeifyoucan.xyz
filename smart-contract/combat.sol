@@ -25,13 +25,12 @@ contract Combat{
         uint256 t;//  game opening time (seconds) <-- optimise by using hours instead
         uint256 b;//  bet amount <-- optimise by mutliplying by a large factor
         bytes32 me1;// p1 encrypted moves <-- optimise by truncating generated hash
-        bytes32 me2;// p2 encrypted moves <-- optimise by truncating generated hash
         address a1;// p1 address
         address a2;// p2 address <-- i.e. challenged person's address
         uint24  d;//  duration (max 194 days), 0=game already revealed  <-- optimise by using hours instead of seconds
         uint16  m1;// p1 moves
         uint16  m2;// p2 moves
-    }// size = 32+32+64+20+20+3+2+2 = 175 bytes = 6 slots @ 20k per slot + 1 slot for hash key = 7*20k = 140k gas per game stored = 140k * 10gwei today = 1400k gwei ~= $2 at bear market ~= $20 at bull market on Ethereum
+    }// size = 32+64+20+20+3+2+2 = 143 bytes = 5 slots @ 20k per slot + 1 slot for hash key = 6*20k = 120k gas per game stored = 120k * 10gwei today = 1200k gwei ~= $1.70 at bear market ~= $17 at bull market on Ethereum
     
     // variables
     mapping(uint256 => Game) public H;
@@ -55,6 +54,7 @@ contract Combat{
     error CloseGameFirst();// 6
     error MustBePlayer();// 7
     error GameAlreadyRevealed();// 8
+    error WinAlreadyClaimed();// 9
 
     constructor() {
         deployer=msg.sender;
@@ -64,54 +64,42 @@ contract Combat{
     function open(uint256 n, bytes32 encryptedMoves, address targetPlayer) external payable {
         H[n] = Game({
             t:block.timestamp, b:msg.value,
-            me1:encryptedMoves, me2:EMPTY_ENCRYPTED_MOVE,
+            me1:encryptedMoves,
             a1:msg.sender, a2:targetPlayer, d:duration,
             m1:EMPTY_MOVE, m2:EMPTY_MOVE
         });
         emit Update(n);
     }
 
-    function close(uint256 n, bytes32 encryptedMoves) external payable {
-        if(EMPTY_ENCRYPTED_MOVE!=H[n].me2) revert ChooseOpenGame();
-        if(address(0)!=H[n].a2 && H[n].a2!=msg.sender) revert ChallengedPlayerMustClose();
+    function close(uint256 n, uint16 moves) external payable {
+        if(EMPTY_MOVE != H[n].m2) revert ChooseOpenGame();
+        if(address(0) != H[n].a2 && H[n].a2!=msg.sender) revert ChallengedPlayerMustClose();
         if(H[n].b != msg.value) revert SendBetAmount();
 
-        H[n].me2 = encryptedMoves;
+        H[n].t = block.timestamp;
+        H[n].m2 = moves;
         H[n].a2 = msg.sender;
         emit Update(n);
     }
 
-    function revealOpening(uint256 n,uint16 moves,uint144 salt) external {
+    function reveal(uint256 n,uint16 moves,uint144 salt) external {
+        if(0==H[n].d) revert GameAlreadyRevealed(); H[n].d=0;// only payout once (prevent reentrancy attack)
         if(H[n].a1!=msg.sender) revert MustBePlayer();
-        if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
+        if(EMPTY_MOVE==H[n].m2) revert CloseGameFirst();
         if(H[n].me1!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
-        H[n].m1=moves;
-        payout(n);
-        emit Update(n);
-    }
         
-    function revealClose(uint256 n,uint16 moves,uint144 salt) external {
-        if(H[n].a2!=msg.sender) revert MustBePlayer();
-        if(EMPTY_ENCRYPTED_MOVE==H[n].me2) revert CloseGameFirst();
-        if(H[n].me2!=keccak256(abi.encodePacked(moves,salt))) revert EnterCorrectParameters();
-        H[n].m2=moves;
-        payout(n);
-        emit Update(n);
-    }
+        H[n].m1=moves;
 
-    function payout(uint256 n) private {
-        if(EMPTY_MOVE==H[n].m1 || EMPTY_MOVE==H[n].m2) return; // not all reveals revealed yet
-        if(0==H[n].d) revert GameAlreadyRevealed();
-        H[n].d=0; // make sure we only payout once (prevent reentrancy attack)
-
+        // determine winner
         uint256 w=ROUNDS;
         uint256 a=H[n].m1; uint256 b=H[n].m2;
         for(uint256 i=ROUNDS; i>0; i--){
             uint256 c=a&0x3; uint256 d=b&0x3;
-            //if(c!=d)if((0==c && 2==d) || (1==c && 0==d) || (2==c && 1==d)){w++;}else{w--;}//0=R,1=P,2=S
             if(c!=d)if(c==(d+1)%3){w++;}else{w--;}//0=R,1=P,2=S
             a>>=2; b>>=2;
         }
+        
+        // payout
         payable(deployer).transfer(H[n].b*5/100);
         if(ROUNDS==w) {
             // draw
@@ -121,30 +109,24 @@ contract Combat{
             // win
             payable(w>ROUNDS?H[n].a1:H[n].a2).transfer(H[n].b*195/100);
         }
-        //emit Reveal(n, m1, uint16(H[n].m2));
         emit Update(n);
     }
 
-    // // if duration expired and
-    // //    both players haven't revealed, refund them both
-    // //    one player only has revealed, give the money to them
-    // //    both have revealed, do nothing
-    // function claim(uint32 n) external {
-    //     // emit DebugAddress(msg.sender);
-    //     if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
-    //     if(EMPTY_MOVE==uint256(H[n].m1) && EMPTY_MOVE==uint256(H[n].m2)) {
-    //         payable(H[n].a1).transfer(H[n].b);
-    //         H[n].a1=address(0);// don't let this happen more than once
-    //     }
-    //     // // Claim the prize money if the other player hasn't revealed after a certain amount of time
-    //     // //   or
-    //     // // Return the money to the original owners
-    //     emit Update(n);
-    // }
+    // closer can force a winning claim after a certain duration since their moves are revealed and P1 could be stalling
+    function claim(uint32 n) external {
+        // anyone can force the claim!
+        if(0==H[n].d) revert WinAlreadyClaimed();
+        if(EMPTY_MOVE!=H[n].m2 && block.timestamp-H[n].t>H[n].d) {
+            H[n].d=0;// only claim once (prevent reentrancy attack)
+            payable(deployer).transfer(H[n].b*5/100);
+            payable(H[n].a2).transfer(H[n].b*195/100);
+        }
+        emit Update(n);
+    }
 
     function cancel(uint256 n) external {
         if(H[n].a1!=msg.sender && H[n].a2!=msg.sender) revert MustBePlayer();
-        if(EMPTY_MOVE==uint256(H[n].m1) && EMPTY_MOVE==uint256(H[n].m2)) {
+        if(EMPTY_MOVE==H[n].m1 && EMPTY_MOVE==H[n].m2) {
             if(address(0)!=H[n].a1) {
                 address a = H[n].a1;
                 H[n].a1 = address(0);// prevent reentrancy
