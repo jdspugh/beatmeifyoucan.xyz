@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <title>BeatMeIfYouCan.xyz</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="beat-me-if-you-can-logo.png">
+  <!-- <meta name="viewport" content="width=device-width,initial-scale=1.0" /> -->
+  <link rel="icon" href="beat-me-if-you-can-logo.png" />
 <style>
 :root{--0:#090a06;--1:#3c3c3c;--2:#bbb;--3:#fff}
+@font-face{font-family:h;src:url(font/neon-pixel-7.ttf)}
 html{background-color:#222;color:var(--2)}
-body{border-collapse:collapse}
-section{background-color:#000;border-radius:1em;padding:1em 2em 2em;display:flex;flex-direction:column;margin-bottom:30px;width:fit-content;font-family:monospace;font-size:14px}
+body{border-collapse:collapse;margin:126px 0 70px}
+section{background-color:#000;border-radius:1em;padding:1em 2em 2em;display:flex;flex-direction:column;margin:2em auto;font-family:monospace;font-size:14px;width:1100px}
 h1,h2{color:var(--3);font-family:sans-serif}
-h1{font-size:350%;font-family:'Neon Pixel-7';font-weight:normal}
+h1{font-size:350%;font-family:h;font-weight:normal;margin:0;height:46px}
 h1 span:nth-child(2n){color:#ff928a}
 h1 span:nth-child(2n+1){color:#38b3ff}
 h2{font-size:120%;text-transform:uppercase}
@@ -28,87 +29,114 @@ input{width:5em;margin-right:6px;background-color:#023;border:1px solid;border-c
 .p1,.p2{color:#a47437;white-space:nowrap}.p1{filter:hue-rotate(306deg)}.p2{filter:hue-rotate(175deg)}
 input{background-color:#320;color:#c70}
 .pill{margin-right:6px;background-color:var(--1);padding:4px 8px;border-radius:9px}
+#choose{display:flex;justify-content:center;align-items:center;position:fixed;width:100%;height:100%;top:0;left:0;background-color:#000;z-index:1}
+.game>div{display:flex;flex-direction:column;align-items:center;margin-bottom:25px;color:#fff;width:100%}
+.game>div>div{display:flex;justify-content:space-evenly;width:100%}
+.game>div>div>div{width:15vw;height:10vw;background-color:#000;border-radius:3vw;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:5vw;text-transform:uppercase;padding:2vw;position:relative;clip-path:inset(0);box-shadow:inset 0 0 20px 7px #000;border:.9vw solid #fff2;text-shadow:-2px 8px 7px black;text-align:center}
+.game>div>div>div:nth-child(n+2){filter:brightness(.3)}
+#choose.game>div>div>div{cursor:pointer}
+#choose.game>div>div>div:hover{filter:brightness(1.6);transform:scale(1.05);transition:.1s}
+.game>div>div>div>div{pointer-events:none}
+.game h2{font-family:system-ui;font-size:4vw}
+.soon:after{content:'Coming Soon!';position:absolute;top:0;left:0;transform:rotate(-45deg) translate(-31%,-105%);font-size:1.4vw;background-color:#f00;padding:.5vw 4vw;text-transform:uppercase;line-height:1vw;white-space:nowrap}
 </style>
 </head>
 
-<body style="margin:1em;display:flex;justify-content:center">
-  <img src="beat-me-if-you-can-logo.png" style="position:fixed;opacity:0.01;width:100%;pointer-events:none">
-  <div style="width:100%;max-width:1100px">
-
-    <nav style="display:flex;justify-content:space-between;align-items:center;position:relative">
-      <div style="display:flex;align-items:center">
-        <img src="beat-me-if-you-can-logo.png" alt="BeatMeIfYouCan.xys Logo" style="height:80px;margin-right:7px"/>
-        <h1><span>Beat</span><span>Me</span><span>If</span><span>You</span><span>Can</span><span style="font-size:60%">.xyz</span></h1>
-      </div>
+<body>
+  <nav style="z-index:9;display:flex;justify-content:space-between;align-items:center;position:fixed;top:0;left:0;width:100%;padding:7px 12px;box-sizing:border-box;background-color:#000;box-shadow:0 0px 15px 1px var(--1)">
+    <div style="display:flex;align-items:center">
+      <img src="beat-me-if-you-can-logo.png" alt="BeatMeIfYouCan.xys Logo" style="height:80px;margin-right:7px"/>
       <div>
-        <button id="login" style="display:none">Connect</button>
-        <div id="logout-container" style="display:flex;align-items:center">
-          <div id="balance" class="pill" style="margin-right:6px"></div>
-          <div id="address" class="pill" style="margin-right:6px"></div>
-          <button id="logout">Disconnect</button>
-        </div>
+        <h1><span>Beat</span><span>Me</span><span>If</span><span>You</span><span>Can</span><span style="font-size:60%">.xyz</span></h1>
+        <div>Blockchain Multiplayer Games</div>
       </div>
-    </nav>
+    </div>
+    <div>
+      <button id="login" style="display:none">Connect</button>
+      <div id="logout-container" style="display:flex;align-items:center">
+        <a id="error-no-ethereum" style="display:none" href="https://metamask.io">Install MetaMask to enable blockchain features</a>
+        <div id="balance" class="pill" style="margin-right:6px"></div>
+        <div id="address" class="pill" style="margin-right:6px"></div>
+        <button id="logout">Disconnect</button>
+      </div>
+    </div>
+  </nav>
 
-    <section>
-      <h2>How to Play</h2>
-      <p>
-        This is a classic game of Rock-Paper-Scissors that can be played against other player on the blockchain.
-      </p>
-      <p>
-        Game progress through 3 stages. First the players submit their encrypted moves to the blockchain. Once the encrypted moves are safetly stored on the blockchain they can be revealed by sending the unencrypted moves and the move encryption keys. Once both players have revealed the smart contract will determine the winner according to the classic rules or Rock-Paper-Scissors and send any bet amount to the winning player.
-      <p>
-        The quickest way to get started is to close some matches in the "Close a Match" section.
-        You can also open a match in the "Open a Match" section, in which case you will need to wait for a challenger to close your match with their moves.
-      </p>
-    </section>
+  <div id="choose" class="game"><div><h2>Choose a Game</h2><div></div></div></div>
+  <div id="choice" class="game"><div><div></div></div></div>
 
-    <section style="display:none">
-      <h2>Waiting for You</h2>
-      Matches waiting for you to reveal your move
-      <div id="yours-waiting"></div>
-    </section>
+  <section>
+    <h2>How to Play</h2>
+    <p>
+      This is the classic Rock-Paper-Scissors game of skill that can now be played against other players on the blockchain.
+    </p>
+    <p>
+      Game progress through 3 stages. First the players submit their encrypted moves to the blockchain. Once the encrypted moves are safetly stored on the blockchain they can be revealed by sending the unencrypted moves and the move encryption keys. Once both players have revealed the smart contract will determine the winner according to the classic rules or Rock-Paper-Scissors and send any bet amount to the winning player.
+    <p>
+      The quickest way to get started is to close some matches in the "Close a Match" section.
+      You can also open a match in the "Open a Match" section, in which case you will need to wait for a challenger to close your match with their moves.
+    </p>
+  </section>
 
-    <section>
-      <h2>Open a Match</h2>
-      <div id="open-match">Player 1 Moves <input class="moves p1" maxlength="6" />Bet <input />CRO <button>Open Match</button></div>
-    </section>
+  <section>
+    <h2>Open a Match</h2>
+    <div id="open-match">Player1 Moves <input class="moves p1" maxlength="6" />Bet <input />CRO <button>Open Match</button></div>
+  </section>
 
-    <section>
-      <h2>Close a Match</h2>
-      To close a match:
-      <ol>
-        <li>Enter 6 Rock/Scissor/Paper moves in the "Your Moves" area by hitting the R,P,S keys</li>
-        <li>Hit the "Fight!" button</li>
-        <li>Sign your transaction using your crypto wallet (such as MetaMask)</li>
-      </ol>
-      <div class="match" id="open"></div>
-    </section>
+  <!-- <section>
+    <h2>Your Open Matches</h2>
+    <div class="match" id="yours"></div>
+  </section> -->
 
-    <section>
-      <h2>Matches Waiting</h2>
-      <div class="match" id="waiting"></div>
-    </section>
+  <section>
+    <h2>Close a Match</h2>
+    To close a match:
+    <ol>
+      <li>Enter 6 Rock/Scissor/Paper moves in the "Your Moves" area by hitting the R,P,S keys</li>
+      <li>Hit the "Fight!" button</li>
+      <li>Sign your transaction using your crypto wallet (such as MetaMask)</li>
+    </ol>
+    <div class="match" id="open"></div>
+  </section>
 
-    <section>
-      <h2>Past Matches</h2>
-      <div class="match" id="closed"></div>
-    </section>
+  <section>
+    <h2>Matches Waiting</h2>
+    <div class="match" id="waiting"></div>
+  </section>
 
-  </div>
-  <script src="./js/lib/moralis.min.js"></script>
+  <section>
+    <h2>Past Matches</h2>
+    <div class="match" id="closed"></div>
+  </section>
+
+  <!-- <footer style="border:1px solid"></footer> -->
+
+  <audio id="click" src="sound/click.mp3"></audio>
+  <audio id="browse" src="sound/browse.mp3"></audio>
+<script src="./js/lib/moralis.min.js"></script>
 <script type="module">
+  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
+  const A=['<div style="font-size:2vw;line-height:2vw;background:linear-gradient(#0005,#0005),center/cover url(image/rps.jpg)">Rock Paper Scissors<div style="font-size:3.6vw;margin-top:1.4vw">Classic</div></div>','<div class="soon" style="font-size:2vw;line-height:2vw;background:linear-gradient(#0004,#0004),center/cover url(image/rps-five-elements.jpg)">Rock Paper Scissors<div style="font-size:3.4vw;margin-top:1.4vw;line-height:3.3vw">Five Elements</div></div>','<div class="soon" style="font-size:4vw;background:linear-gradient(#0005,#0005),center/cover url(image/karate.jpg)">Karate</div>','<div class="soon" style="background:linear-gradient(#0005,#0005),center/cover url(image/mma.jpg)">MMA</div>']
+  $('#choose>div>div').innerHTML=A.join('')
+  $$('#choose>div>div>div').forEach(e=>e.addEventListener('mouseover',()=>$('#browse').play()))
+  $('#choose>div>div>div').addEventListener('click',e=>{$('#click').play();e=e.currentTarget.parentNode.parentNode.parentNode.style;setTimeout(()=>e.display='none',2e3)})
+  $('#choice>div>div').innerHTML=A[0]
+  
   import{CONTRACT as C}from'./js/contract.js';import{ethers as E}from'./js/lib/ethers-5.6.esm.min.js';const U=E.utils
-  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,c=(a,b)=>a.toLowerCase()==b.toLowerCase(),a=(a,b)=>!b&&u?.get('ethAddress').toLowerCase()==a.toLowerCase()?'<div class="you">You</div>':a.slice(0,5)+'&hellip;'+a.slice(-5),s=s=>s>1?'s':'',t=t=>{t=(Date.now()-t*1e3)/1e3/60;return (t>1440?`${t=t/1440|0} day${s(t)}`:t>60?`${t=t/60|0} hour${s(t)}`:`${t=t|0} minute${s(t)}`)+' ago'},b=w=>new Intl.NumberFormat(navigator.locale,{maximumSignificantDigits:3}).format(w/1e18)+' CRO',m=n=>{let s='';for(let i=6;i--;)s+=`&#999${4+(n&3)};`,n>>=2;return s},w=(m1,m2)=>{let s=0;for(let i=6;i--;){let p1=m1&3,p2=m2&3;if(p1!=p2){s+=p1==(p2+1)%3?1:-1};m1>>=2;m2>>=2};return s},v=s=>{let v;for(let c of s){v<<=2;v+='RPS'.indexOf(c)}return U.hexlify(v).slice(2).padStart(4,'0')}
+  const c=(a,b)=>a&&b&&(a.toLowerCase()==b.toLowerCase()),a=(a,b)=>!b&&u?.get('ethAddress').toLowerCase()==a.toLowerCase()?'<div class="you">You</div>':a.slice(0,5)+'&hellip;'+a.slice(-5),s=s=>s>1?'s':'',t=t=>{t=(Date.now()-t*1e3)/1e3/60;return (t>1440?`${t=t/1440|0} day${s(t)}`:t>60?`${t=t/60|0} hour${s(t)}`:`${t=t|0} minute${s(t)}`)+' ago'},b=w=>new Intl.NumberFormat(navigator.locale,{maximumSignificantDigits:3}).format(M.Units.FromWei(w))+' '+({'0xa86a':'AVAX','0xa869':'AVAX','0x38':'BNB','0x61':'BNB','0x19':'CRO','0x152':'tCRO','0x5':'ETH','0x2a':'ETH','0x1':'ETH','0x4':'ETH','0x3':'ETH','0xfa':'FTM','0x89':'MATIC','0x13881':'MATIC'})[M.chainId],m=n=>{let s='';for(let i=6;i--;)s+=`&#999${4+(n&3)};`,n>>=2;return s},w=(m1,m2)=>{let s=0;for(let i=6;i--;){let p1=m1&3,p2=m2&3;if(p1!=p2){s+=p1==(p2+1)%3?1:-1};m1>>=2;m2>>=2};return s},v=s=>{let v;for(let c of s){v<<=2;v+='RPS'.indexOf(c)}return U.hexlify(v).slice(2).padStart(4,'0')}
   const serverUrl='https://zwrgre5eepkc.usemoralis.com:2053/server',appId='l4EzyzLJgdwedW9y0Yjr7zV3ZJJQ6OWUp4guuUr3',M=Moralis,G=M.Object.extend('Game'),f=(f,p,v=0)=>M.executeFunction({contractAddress:C.address,functionName:f,abi:C.abi,params:p,msgValue:v}),Z='0x0000000000000000000000000000000000000000',N='65535'
 
-  let u,r
+  let u,e='',r,h
 
-  await M.start({serverUrl,appId});M.enableWeb3()
+  await M.start({serverUrl,appId});await M.enableWeb3();await M.switchNetwork('0x152');M.onChainChanged(refresh);M.onAccountChanged(async a=>{
+    D('a=',a);
+    u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'});
+    refresh()})
+  if(!ethereum){$('#error-no-ethereum').display='block'}
 
   $('#login').addEventListener('click',async()=>{
-    u=M.User.current()
-    if(!u)u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'})
+    // u=M.User.current()
+    // if(!u)u=await M.authenticate({signingMessage:'Connect with beatmeifyoucan.xyz'})
     refresh()
   })
   $('#logout').addEventListener('click',async()=>{await M.User.logOut();refresh()})
@@ -117,45 +145,65 @@ input{background-color:#320;color:#c70}
     const o=v(i[0].value)
     const s=U.hexlify(crypto.getRandomValues(new Uint8Array(18))).slice(2).padStart(40,'0')
     const n=U.hexlify(crypto.getRandomValues(new Uint8Array(32)))
-    if(null!=prompt(`Save your Game ID and Encrypted Moves! You will need them later in order to reveal your moves to your opponent and claim your prize.`,`Game ID=${n} Encrypted Moves=0x${o+s}`)){
+    //if(null!=prompt(`Save your Game ID and Encrypted Moves! You will need them later in order to reveal your moves to your opponent and claim your prize.`,`Game ID=${n} Encrypted Moves=0x${o+s}`)){
+      h[n]={m:o,s:s}
+      localStorage.setItem(e,JSON.stringify(h))
       f('open',{n:n,encryptedMoves:U.keccak256('0x'+o+s),targetPlayer:Z},M.Units.ETH(i[1].value))
-    }
+    //}
   })
 
   if('loading'!=document.readyState){refresh()}else document.addEventListener('DOMContentLoaded',refresh)
   async function refresh(){
-    let e
     u=M?M.User.current():null
     $('#login').style.display=u?'none':'block'
     $('#logout-container').style.display=u?'flex':'none'
     if(u){
-      $('#balance').innerText=b((await M.Web3API.account.getNativeBalance()).balance)
+      $('#balance').innerText=b((await M.Web3API.account.getNativeBalance({chain:M.chainId})).balance)
       e=u.get('ethAddress')
       $('#address').innerHTML=a(e,true)
       e=e.toLowerCase()
+      h=JSON.parse(localStorage.getItem(e)||'{}')
     }
 
-    r=await(new M.Query(G)).equalTo('a2',Z).notEqualTo('a1',e).descending('t').find()
-    $('#open').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player 1</li><li>Bet</li><li>Player 2 Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input class="moves" maxlength="6" /><button data-fight="${g.get('n')}">Fight!</button></li></ul>`).join('')
+    // r=await(new M.Query(G)).equalTo('a2',Z).descending('t').find()
+    // $('#yours').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player1</li><li>Bet</li><li>Player2 Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input class="moves" maxlength="6" /><button data-n="${g.get('n')}" data-b="${g.get('b')}">Fight!</button></li></ul>`).join('')
+
+    r=await(new M.Query(G)).notEqualTo('a1',Z).equalTo('a2',Z).descending('t').find()
+    $('#open').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player1</li><li>Bet</li><li>Player2 Moves (R,P,S)</li></ul>'+r.map(g=>`<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${b(g.get('b'))}</li><li class="p2"><input class="moves" maxlength="6" /><button class="fight" data-n="${g.get('n')}" data-b="${g.get('b')}">Fight!</button></li><li>${c(e,g.get('a1'))?`<button class="cancel" data-n="${g.get('n')}">Cancel</button>`:''}</li></ul>`).join('')
     setInterval(()=>{$$('.moves').forEach(e=>e.value=e.value.toUpperCase().split('').filter(c=>'RPS'.includes(c)).join(''))},100)
-    $$('button[data-fight]').forEach(b=>b.addEventListener('click',e=>{
+    $$('#open .fight').forEach(b=>b.addEventListener('click',e=>{
       let t=e.target,m=t.previousSibling.value
       if(6==m.length){
         let o=v(m)
         let s=U.hexlify(crypto.getRandomValues(new Uint8Array(18))).slice(2).padStart(40,'0')
         D('0x'+o+s)
-        f('close',{n:t.getAttribute('data-fight'),encryptedMoves:U.keccak256('0x'+o+s)})
+        f('close',{n:t.getAttribute('data-n'),encryptedMoves:U.keccak256('0x'+o+s)},t.getAttribute('data-b'))
       }
     }))
+    $$('#open .cancel').forEach(b=>b.addEventListener('click',e=>f('cancel',{n:e.target.getAttribute('data-n')})))
 
     r=await(M.Query.or(
     (new M.Query(G)).notEqualTo('a1',Z).notEqualTo('a2',Z).equalTo('m1',N),
     (new M.Query(G)).notEqualTo('a1',Z).notEqualTo('a2',Z).equalTo('m2',N)
     )).descending('t').find()
-    $('#waiting').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Bet</li><li></li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return `<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${N==m1?'?':m(m1)}</li><li class="p2">${N==m2?'?':m(m2)}</li><li>${b(g.get('b'))}</li><li>${c(e,g.get('a1'))&&N==m1||c(e,g.get('a2'))&&N==m2?'<button>Reveal</button>':''}</li><li>${N==m1&&N==m2?'<button>Cancel</button>':''}</li></ul>`}).join('')
+    $('#waiting').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player1</li><li>Player2</li><li>Player1 Moves</li><li>Player2 Moves</li><li>Bet</li><li></li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return`<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${N==m1?'?':m(m1)}</li><li class="p2">${N==m2?'?':m(m2)}</li><li>${b(g.get('b'))}</li><li>${c(e,g.get('a1'))&&N==m1||c(e,g.get('a2'))&&N==m2?`<button data-n="${b(g.get('n'))} data-f="${N==m1?'revealOpening':'revealClose'}">Reveal</button>`:''}</li><li>${N==m1&&N==m2?`<button data-n="${b(g.get('n'))}">Cancel</button>`:''}</li></ul>`}).join('')
+    $$('#waiting .reveal').forEach(b=>b.addEventListener('click',e=>{
+      let t=e.target,n=t.getAttribute('data-n')
+      f(t.getAttribute('data-f'),{n:n,moves:h[n].m,salt:h[n].s})
+    }))
+    $$('#waiting .cancel').forEach(b=>b.addEventListener('click',e=>{
+      let t=e.target,m=t.previousSibling.value
+      if(6==m.length){
+        let o=v(m)
+        let s=U.hexlify(crypto.getRandomValues(new Uint8Array(18))).slice(2).padStart(40,'0')
+        D('0x'+o+s)
+        f('close',{n:t.getAttribute('data-n'),encryptedMoves:U.keccak256('0x'+o+s)},t.getAttribute('data-b'))
+      }
+    }))
 
     r=await(new M.Query(G)).notEqualTo('a2',Z).notEqualTo('m1',N).notEqualTo('m2',N).descending('t').find()
-    $('#closed').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player 1</li><li>Player 2</li><li>Player 1 Moves</li><li>Player 2 Moves</li><li>Winnings</li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return `<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${m(m1)}</li><li class="p2">${m(m2)}</li><li>${0==p?'':p>0?'P1':'P2'+' won '+b(g.get('b'))}</li></ul>`}).join('')
+    $('#closed').innerHTML='<ul><li>Match ID</li><li>Time</li><li>Player1</li><li>Player2</li><li>Player1 Moves</li><li>Player2 Moves</li><li>Winnings</li></ul>'+r.map(g=>{let m1=g.get('m1'),m2=g.get('m2'),p=w(m1,m2);return`<ul><li>${a(g.get('n'))}</li><li>${t(g.get('t'))}</li><li>${a(g.get('a1'))}</li><li>${a(g.get('a2'))}</li><li class="p1">${m(m1)}</li><li class="p2">${m(m2)}</li><li>${0==p?'':p>0?'P1':'P2'+' won '+b(g.get('b'))}</li></ul>`}).join('')
   }
 </script>
 </body>
+</html>
