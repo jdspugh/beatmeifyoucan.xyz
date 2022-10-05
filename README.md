@@ -1,6 +1,6 @@
 # BeatMeIfYouCan.xyz
 
-Moralis + Cronos Hackathon Entry
+Moralis + Google Hackathon Entry
 
 ## Files
 
