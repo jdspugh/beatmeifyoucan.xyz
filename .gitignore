@@ -1,5 +1,23 @@
 
 .DS_Store
-node_modules
 *.sh
 media/
+
+# hardhat
+.env
+artifacts/
+cache/
+coverage/
+typechain-types/
+*.sol/
+scripts/
+mochaOutput.json
+tsconfig.json
+#   solcover
+coverage.json
+
+# vsc
+.vscode/
+
+# nodejs
+node_modules
