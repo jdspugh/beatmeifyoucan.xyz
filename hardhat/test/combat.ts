@@ -17,20 +17,22 @@ describe('Combat contract', function () {
 
   describe('Game', async function () {
     const n=1, mEmpty=0xffff
-    const mRRRRRR=0b11000000000000, mPPPPPP=0b11010101010101
+    const mRRRRRR=0b000000000000, mPPPPPP=0b010101010101, mR=0b00, mP=0x01
     const targetAnyPlayer='0x0000000000000000000000000000000000000000'
     const salt='0x000000000000000000000000000000000000'
-    const meRRRRRR=ethers.utils.keccak256('0x'+mRRRRRR.toString(16)+salt.slice(2)).slice(0,-32)
-    const mePPPPPP=ethers.utils.keccak256('0x'+mPPPPPP.toString(16)+salt.slice(2)).slice(0,-32)
-    console.log(meRRRRRR,mePPPPPP)
+    const meRRRRRR=ethers.utils.keccak256('0x'+mRRRRRR.toString(16).padStart(4,'0')+salt.slice(2)).slice(0,-32)
+    const mePPPPPP=ethers.utils.keccak256('0x'+mPPPPPP.toString(16).padStart(4,'0')+salt.slice(2)).slice(0,-32)
+    const meR=ethers.utils.keccak256('0x'+mR.toString(16).padStart(4,'0')+salt.slice(2)).slice(0,-32)
+    const meP=ethers.utils.keccak256('0x'+mP.toString(16).padStart(4,'0')+salt.slice(2)).slice(0,-32)
+    console.log('meRRRRRR=',meRRRRRR,'mePPPPPP=',mePPPPPP,'meR=',meR,'meP=',meP)
     const fee={n:195,d:200}
 
     it('duplicate game', async function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       // a1 opens
-      await expect( combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})).to.revertedWithCustomError(combat,'ChooseUnusedGameID')
+      await expect( combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})).to.revertedWithCustomError(combat,'ChooseUnusedGameID')
     })
 
     it('Open(a1), Close(a2), Reveal(a1), Draw', async function () {
@@ -42,7 +44,7 @@ describe('Combat contract', function () {
       await expect( await a3.getBalance() ).to.equal( ethers.utils.parseEther('1000') )
 
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await combat.provider.getBalance(combat.address) ).to.equal( ethers.utils.parseEther('10') )
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
@@ -81,7 +83,7 @@ describe('Combat contract', function () {
       await expect( await a3.getBalance() ).to.equal( ethers.utils.parseEther('1000') )
 
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,a2.address,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,a2.address,{value:ethers.utils.parseEther('10')})
       await expect( await combat.provider.getBalance(combat.address) ).to.equal( ethers.utils.parseEther('10') )
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
@@ -105,7 +107,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await combat.provider.getBalance(combat.address) ).to.equal( ethers.utils.parseEther('10') )
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
@@ -124,7 +126,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,mePPPPPP,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,mePPPPPP,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await combat.provider.getBalance(combat.address) ).to.equal( ethers.utils.parseEther('10') )
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
@@ -142,7 +144,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await combat.provider.getBalance(combat.address) ).to.equal( ethers.utils.parseEther('10') )
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
@@ -160,7 +162,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,mePPPPPP,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,mePPPPPP,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
       // a1 cancels
@@ -178,7 +180,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,mePPPPPP,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,mePPPPPP,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
       // a2 cancels
@@ -192,7 +194,7 @@ describe('Combat contract', function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
 
       // a1 opens
-      await combat.connect(a1).open(n,mePPPPPP,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,mePPPPPP,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
 
       // a2 close
@@ -207,7 +209,7 @@ describe('Combat contract', function () {
     it('Open(a1), Close(a2), Reveal(a1), Cancel(a1)', async function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       // a2 close
       await expect( combat.connect(a2).close(n,mPPPPPP,{value:ethers.utils.parseEther('10')}) ).to.emit(combat,'Update').withArgs(n)
       // reveal a1 wins
@@ -219,7 +221,7 @@ describe('Combat contract', function () {
     it('Open(a1) Close(a2) Claim(a2) (expired)', async function () {
       const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       // a2 close
       await expect( combat.connect(a2).claim(n) ).to.be.revertedWithCustomError(combat,'CloseGameFirst')
       await expect( combat.connect(a2).close(n,mPPPPPP,{value:ethers.utils.parseEther('10')}) ).to.emit(combat,'Update').withArgs(n)
@@ -246,7 +248,7 @@ describe('Combat contract', function () {
       // await expect( combat.connect(a1).setDuration(d) ).to.be.revertedWithCustomError(combat,'MustBeDeployer')
       await combat.connect(deployer).setDuration(d)
       // a1 opens
-      await combat.connect(a1).open(n,meRRRRRR,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      await combat.connect(a1).open(n,meRRRRRR,6,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
       // a2 close
       await expect( combat.connect(a2).close(n,mPPPPPP,{value:ethers.utils.parseEther('10')}) ).to.emit(combat,'Update').withArgs(n)
       // a2 claims
@@ -260,6 +262,19 @@ describe('Combat contract', function () {
       await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('990') )
       await expect( await a2.getBalance() ).to.equal( ethers.utils.parseEther('1009.5') )
       await expect( await deployer.getBalance() ).to.equal( ethers.utils.parseEther('1000.5') )
+    })
+
+    it('rounds', async function () {
+      const { combat, deployer, a1, a2, a3 } = await loadFixture(fixture)
+      // a1 opens
+      await combat.connect(a1).open(n,meR,1,targetAnyPlayer,{value:ethers.utils.parseEther('10')})
+      // a2 close
+      await expect( combat.connect(a2).close(n,mP,{value:ethers.utils.parseEther('10')}) ).to.emit(combat,'Update').withArgs(n)
+      // reveal a1 wins
+      await combat.connect(a1).reveal(n,mR,salt)
+      await expect( await a1.getBalance() ).to.equal( ethers.utils.parseEther('1009.5') )
+      await expect( await a2.getBalance() ).to.equal( ethers.utils.parseEther('990') )
+      await expect( await deployer.getBalance() ).to.equal( ethers.utils.parseEther('1000.5') )      
     })
   })
 })

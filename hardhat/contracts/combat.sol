@@ -20,6 +20,7 @@ contract Combat{
         uint32  d;// duration in seconds (up to 136 yearas), 0=game already revealed  <-- optimise by using hours instead of seconds
         uint16  m1;// p1 moves (optimised)
         uint16  m2;// p2 moves (optimised)
+        uint8   r;// number of rounds
         uint8   b;// bet amount (10**b wei)
     }// size = 24+24+16 + 3+2+2+1 = 72 bytes = 3 (2.25) slots @ 20k per slot + 1 slot for hash key
     
@@ -51,13 +52,13 @@ contract Combat{
     }
 
     // set targetPlayer to address(0) to create an open game
-    function open(uint256 n, bytes16 encryptedMoves, address targetPlayer) external payable {
+    function open(uint256 n, bytes16 encryptedMoves, uint8 r, address targetPlayer) external payable {
         if(EMPTY_ENCRYPTED_MOVE!=H[n].me1) revert ChooseUnusedGameID();// revert sends back the money
         H[n] = Game({
             t:uint40(block.timestamp), b:log10(msg.value),
             me1:encryptedMoves,
             a1:msg.sender, a2:targetPlayer, d:duration,
-            m1:EMPTY_MOVE, m2:EMPTY_MOVE
+            m1:EMPTY_MOVE, m2:EMPTY_MOVE, r:r
         });
         emit Update(n);
     }
@@ -106,10 +107,9 @@ contract Combat{
         uint256 w1=0;
         uint256 w2=0;
         uint256 a=moves;
-        while (true) {
+        for (uint256 i=H[n].r; i>0; i--) {
             uint256 c=a&0x3;
             uint256 d=b&0x3;
-            if(0x3==c)break;// number of rounds determined by position of 0b11 in player1's moves
             if(c!=d)if(c==(d+1)%3){w2++;}else{w1++;}//0=R,1=P,2=S
             a>>=2;
             b>>=2;
