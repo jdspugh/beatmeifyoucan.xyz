@@ -2,7 +2,13 @@
 <script>
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,c=$('canvas').getContext('2d')
 c.canvas.width=window.innerWidth;c.canvas.height=window.innerHeight
-let x=c.canvas.width/2,y=c.canvas.height/2,vx,vy
-onkeydown=e=>{D('d e=',e);switch(e.key.toLowerCase()){case'a','ArrowDown':x--;case'w','ArrowUp':y--;case'd','ArrowRight':x++;case's','ArrowDown':y++};c.fillRect(x,y,10,10)}
-onkeyup=e=>{D('u e=',e);switch(e.key.toLowerCase()){case'a','ArrowDown':x--;case'w','ArrowUp':y--;case'd','ArrowRight':x++;case's','ArrowDown':y++};c.fillRect(x,y,10,10)}
+let x=c.canvas.width/2,y=c.canvas.height/2,vx=vy=0
+onkeydown=e=>{D('e=',e);switch(e.key){case'a':case'ArrowLeft':vx=-1;break;case'w':case'ArrowUp':vy=-1;break;case'd':case'ArrowRight':vx=1;break;case's':case'ArrowDown':vy=1;break}}
+onkeyup=_=>vx=vy=0
+requestAnimationFrame(function f(){
+  c.fillStyle='#0f0';c.fillRect(0,0,c.canvas.width,c.canvas.height)
+  x+=vx;y+=vy
+  c.fillStyle='#000';c.fillRect(x,y,10,10)
+  requestAnimationFrame(f)
+})
 </script>
