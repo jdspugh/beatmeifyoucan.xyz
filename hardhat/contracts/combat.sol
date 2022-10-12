@@ -64,21 +64,23 @@ contract Combat{
     }
 
     function log10(uint256 x) private pure returns(uint8) {
-      uint256 r=0;
-      while (true) {
-        x/=10;
-        if(0==x)break;
-        r++;
+      unchecked {
+        uint256 r=0;
+        while (true) {
+          x/=10;
+          if(0==x)break;
+          r++;
+        }
+        return uint8(r);
       }
-      return uint8(r);
     }
 
     function pow10(uint8 x) private pure returns(uint256) {
       uint256 r=1;
       uint256 y=x;// use native data primative, uint256, inside loop
-      while (y>0) {
-        r*=10;
-        y--;
+        while (y>0) {
+          r*=10;
+          unchecked { y--; }
       }
       return r;
     }
@@ -106,13 +108,15 @@ contract Combat{
         // determine winner
         uint256 w1=0;
         uint256 w2=0;
-        uint256 a=moves;
-        for (uint256 i=H[n].r; i>0; i--) {
-            uint256 c=a&0x3;
-            uint256 d=b&0x3;
-            if(c!=d)if(c==(d+1)%3){w2++;}else{w1++;}//0=R,1=P,2=S
-            a>>=2;
-            b>>=2;
+        unchecked{
+          uint256 a=moves;
+          for (uint256 i=H[n].r; i>0; --i) {
+              uint256 c=a&0x3;
+              uint256 d=b&0x3;
+              if(c!=d)if(c==(d+1)%3){w2++;}else{w1++;}//0=R,1=P,2=S
+              a>>=2;
+              b>>=2;
+          }
         }
         
         // payout
