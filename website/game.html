@@ -2,35 +2,60 @@
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 </head>
-<body style="overflow:hidden">
-  <canvas style="width:100%;height:100%"></canvas>
+<body>
+  <canvas style="width:1024px;height:1024px"></canvas>
 </body>
 <script>
-const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log,c=$('canvas').getContext('2d')
-c.canvas.width=window.innerWidth;c.canvas.height=window.innerHeight
-let x=c.canvas.width/2|0,y=c.canvas.height/2|0,vx=vy=0,tx=ty=null,k=[]
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
+const c=$('canvas').getContext('2d');w=c.canvas.width=window.innerWidth;h=c.canvas.height=window.innerHeight
+const a=new Map,d=10
+let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{}
+
+const ws=new WebSocket(`wss://${location.host}/wss`)
+ws.addEventListener('message',e=>{
+  D('e=',e)
+  e=e.data.split(' ')
+  const i=parseInt(e[0]),p=a.get(i)
+  if(!p)ws.send(`n ${u.n}`)
+  a.set(i,{...p,...('n'==e[1])?{n:e[2]}:{x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])}})
+})
 
 // keyboard movement
-onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key)}
-onkeyup=e=>{vx=vy=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
+onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)w.close()}
+onkeyup=e=>{nx=ny=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
 
 // mouse/touch movement
 onmousedown=e=>{tx=e.clientX|0;ty=e.clientY|0}
 ontouchstart=e=>{e=e.touches[0];tx=e.clientX|0;ty=e.clientY|0}
 
 requestAnimationFrame(function f(){
+  D(w.readyState)
+
   // background
-  c.fillStyle='#0f0';c.fillRect(0,0,c.canvas.width,c.canvas.height)
+  c.fillStyle='#090';c.fillRect(0,0,c.canvas.width,c.canvas.height)
 
   // character keyboard movement
-  switch(k[k.length-1]){case'a':vx=-1;vy=0;break;case's':vx=0;vy=1;break;case'd':vx=1;vy=0;break;case'w':vx=0;vy=-1}
+  switch(k[k.length-1]){case'a':nx=-1;ny=0;break;case's':nx=0;ny=1;break;case'd':nx=1;ny=0;break;case'w':nx=0;ny=-1}
   // character mouse movement
-  if(tx&&tx!=x){vx=Math.sign(tx-x);vy=0}else if(ty&&ty!=y){vx=0;vy=Math.sign(ty-y)};if(tx==x&&ty==y){tx=ty=null,vx=vy=0}
+  if(tx&&tx!=x){nx=Math.sign(tx-x);ny=0}else if(ty&&ty!=y){nx=0;ny=Math.sign(ty-y)};if(tx==x&&ty==y){tx=ty=null,nx=ny=0}
+  // net code
+  if(vx!=nx||vy!=ny){if(w.OPEN==w.readyState)ws.send(`${x} ${y} ${nx} ${ny}`),vx=nx,vy=ny}
   // character render
-  x+=vx;y+=vy;c.fillStyle='#000';c.fillRect(x,y,10,10)
+  x+=vx;y+=vy;x&=1023;y&=1023;c.fillStyle='#000';c.fillRect(x,y,d,d);c.fillText(u.n,x+(d-c.measureText(u.n).width)/2,y-6)
+
+  a.forEach(p=>{
+    // D('p=',p)
+    p.x+=p.vx;p.y+=p.vy;p.x&=1023
+    c.fillStyle='#000';c.fillRect(p.x,p.y,10,10);c.fillText(p.n,p.x+(d-c.measureText(p.n).width)/2,p.y-6)
+  })
 
   // next frame
   requestAnimationFrame(f)
+})
+
+ws.addEventListener('open',e=>{
+  if(!u?.n){u.n=prompt('Enter your name');localStorage.setItem('u',JSON.stringify(u))}
+  ws.send(`n ${u.n}`)
 })
 </script>
 </html>
