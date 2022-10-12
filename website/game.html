@@ -2,12 +2,13 @@
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 </head>
-<body>
-  <canvas style="width:1024px;height:1024px"></canvas>
+<body style="margin:0;display:flex;justify-content:center;align-items:center;background-color:#000;">
+  <canvas width="1024" height="512"></canvas>
 </body>
 <script>
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
-const c=$('canvas').getContext('2d');w=c.canvas.width=window.innerWidth;h=c.canvas.height=window.innerHeight
+// const c=$('canvas').getContext('2d');w=c.canvas.width=window.innerWidth;h=c.canvas.height=window.innerHeight
+const C=$('canvas');c=C.getContext('2d');w=c.canvas.width;h=c.canvas.height
 const a=new Map,d=10
 let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{}
 
@@ -26,8 +27,11 @@ onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)w.close()}
 onkeyup=e=>{nx=ny=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
 
 // mouse/touch movement
-onmousedown=e=>{tx=e.clientX|0;ty=e.clientY|0}
-ontouchstart=e=>{e=e.touches[0];tx=e.clientX|0;ty=e.clientY|0}
+C.addEventListener('mousedown',e=>{D('e=',e);tx=e.offsetX|0;ty=e.offsetY|0})
+// onmousedown=e=>{const r=e.target.getBoundingClientRect();tx=e.pageX-r.left|0;ty=e.pageY-r.top|0}
+// onmousedown=e=>{tx=e.layerX|0;ty=e.layerY|0}
+// ontouchstart=e=>{e=e.touches[0];tx=e.clientX|0;ty=e.clientY|0}
+C.addEventListener('touchstart',e=>{e=e.touches[0];tx=e.offsetX|0;ty=e.offsetX|0})
 
 const r=(x,y,n)=>{c.fillStyle='#000';c.fillRect(x,y,d,d);c.fillText(n,x+d+3,y+d)}
 requestAnimationFrame(function f(){
@@ -42,9 +46,10 @@ requestAnimationFrame(function f(){
   if(vx!=nx||vy!=ny){if(w.OPEN==w.readyState)ws.send(`${x} ${y} ${nx} ${ny}`),vx=nx,vy=ny}
   // character render
   x+=vx;y+=vy;x&=1023;y&=1023;r(x,y,u.n)
+  // D(x,y,vx,vy)
 
   a.forEach((p,i)=>{
-    D('p=',p)
+    // D('p=',p)
     p.x+=p.vx;p.y+=p.vy;p.x&=1023;r(p.x,p.y,i+' '+p.n)
   })
 
