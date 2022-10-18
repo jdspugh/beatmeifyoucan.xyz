@@ -1,65 +1,96 @@
-<html>
-<head>
+<!-- <html style="background-color:#532;position:fixed;width:100%;height:100%;top:0"> -->
+  <html>
+    <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <style>
+    html,body{width:100%;height:100%}
+    button{all:unset;color:#66f;width:100%;text-align:center;padding:12px;box-sizing:border-box;cursor:pointer;width:100%;text-align:center;border-bottom:1px solid #aaa}button:last-child{border-bottom:none}button:hover{background-color:#eee}
+    .buttons>div{display:flex}
+    .hand{font-size:200%}
+  </style>
 </head>
-<body style="margin:0;display:flex;justify-content:center;align-items:center;background-color:#000;">
-  <canvas width="1024" height="512"></canvas>
+  <body style="margin:0;background-color:#44a;font-family:sans-serif">
+    <canvas style="width:1024px;height:512px"></canvas>
+  <div id="alert" style="display:none;position:absolute;width:auto;background-color:#fff;border-radius:12px;overflow:hidden;bottom:0;left:50%;transform:translate(-50%,0)">
+    <div id="msg" style="margin:18px 12px;text-align:center"></div>
+    <div id="buttons" style="border-top:1px solid #aaa">
+      <div class="a" style="display:none"><button>Ignore</button><button>Challenge</button></div>
+      <div class="b" style="display:none"><button class="hand">&#9994;</button><button class="hand">&#9995;</button><button class="hand">&#9996;</button></div>
+    </div>
+  </div>
 </body>
 <script>
+// player p{x,y,vx,vy,n:name,c:collision debounce,d:challenge}
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
-// const c=$('canvas').getContext('2d');w=c.canvas.width=window.innerWidth;h=c.canvas.height=window.innerHeight
-const C=$('canvas');c=C.getContext('2d');w=c.canvas.width;h=c.canvas.height
+const m=devicePixelRatio;C=$('canvas');C.width=1024*m;C.height=512*m;c=C.getContext('2d');w=c.canvas.width/m;h=c.canvas.height/m;c.font=`${16*m}px sans-serif`
 const a=new Map,d=10
-let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{}
+let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{};u.u||=crypto.randomUUID(),o=null
+D('m,w,h,u',m,w,h,u)
+
+// alert
+alert=(s,r)=>{$('#msg').innerText=s;$$('#buttons>div').forEach(e=>{D('e=',e);e.style.display=r==e.classList[0]?'block':'none'});$('#alert').style.display='block'}
+// alert=(s,r)=>{}
+$$('button').forEach(e=>e.addEventListener('click',e=>{D('e=',e);send(`c ${b} ${e.target.innerText.charCodeat(0)-9994}`);$('.alert').style.display='none'}))
 
 // net code
-const ws=new WebSocket(`wss://${location.host}/wss`)
+let ws
+// const connect=_=>{try{ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)}catch(e){D('ws error e=',e)}};send=m=>ws.OPEN==ws.readyState?ws.send(m):connect();connect()// send or reconnect
+const connect=_=>{D('ws connect');ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)};send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
+ws.addEventListener('open',e=>{
+  if(!u?.n){u.n=prompt('Enter your name');localStorage.setItem('u',JSON.stringify(u))}
+  send(`j ${x} ${y} ${nx} ${ny} ${u.n}`)// join
+})
 ws.addEventListener('message',e=>{
-  D('e=',e)
   e=e.data.split(' ')
   const i=parseInt(e[0]),p=a.get(i)
-  if(!p)ws.send(`n ${x} ${y} ${nx} ${ny} ${u.n}`)
-  a.set(i,{...p,...'n'==e[1]?{x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6]}:{x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])}})
+  switch(e[1]){
+    case'j':send(`n ${x} ${y} ${nx} ${ny} ${u.n}`);break// join
+    case'c':p.d++;break// challenge
+    case'n':a.set(i,{x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6]});break// name
+    default:a.set(i,{x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])})// move
+  }
 })
+ws.addEventListener('close',e=>{
+  D('ws close')
+})
+// setInterval(_=>ws.OPEN==ws.readyState?0:connect(),3e4)// keep alive every 30s
 
 // keyboard movement
-onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)w.close()}
+onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)ws.close()}
 onkeyup=e=>{nx=ny=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
-
 // mouse/touch movement
-C.addEventListener('mousedown',e=>{D('e=',e);tx=e.offsetX|0;ty=e.offsetY|0})
-// onmousedown=e=>{const r=e.target.getBoundingClientRect();tx=e.pageX-r.left|0;ty=e.pageY-r.top|0}
-// onmousedown=e=>{tx=e.layerX|0;ty=e.layerY|0}
-// ontouchstart=e=>{e=e.touches[0];tx=e.clientX|0;ty=e.clientY|0}
-C.addEventListener('touchstart',e=>{e=e.touches[0];tx=e.offsetX|0;ty=e.offsetX|0})
+const v=(x,y)=>{tx=(x-m/2)|0;ty=(y-m/2)|0}
+C.addEventListener('mousedown',e=>v(e.offsetX,e.offsetY))
+C.addEventListener('touchstart',e=>{e=e.touches[0];v(e.offsetX,e.offsetY)})
 
-const r=(x,y,n)=>{c.fillStyle='#000';c.fillRect(x,y,d,d);c.fillText(n,x+d+3,y+d)}
+const eps=1e3/240;let e=Date.now()/eps
 requestAnimationFrame(function f(){
   // background
   c.fillStyle='#090';c.fillRect(0,0,c.canvas.width,c.canvas.height)
 
-  // character keyboard movement
-  switch(k[k.length-1]){case'a':nx=-1;ny=0;break;case's':nx=0;ny=1;break;case'd':nx=1;ny=0;break;case'w':nx=0;ny=-1}
-  // character mouse movement
-  if(tx&&tx!=x){nx=Math.sign(tx-x);ny=0}else if(ty&&ty!=y){nx=0;ny=Math.sign(ty-y)};if(tx==x&&ty==y){tx=ty=null,nx=ny=0}
-  // net code
-  if(vx!=nx||vy!=ny){if(w.OPEN==w.readyState)ws.send(`${x} ${y} ${nx} ${ny}`),vx=nx,vy=ny}
-  // character render
-  x+=vx;y+=vy;x&=1023;y&=1023;r(x,y,u.n)
-  // D(x,y,vx,vy)
+  // evolve
+  while(e<Date.now()/eps){
+    //   character keyboard movement
+    switch(k[k.length-1]){case'a':nx=-1;ny=0;break;case's':nx=0;ny=1;break;case'd':nx=1;ny=0;break;case'w':nx=0;ny=-1}
+    //   character mouse movement
+    if(tx&&tx!=x){nx=Math.sign(tx-x);ny=0}else if(ty&&ty!=y){nx=0;ny=Math.sign(ty-y)};if(tx==x&&ty==y){tx=ty=null,nx=ny=0}
+    //   net code
+    if(vx!=nx||vy!=ny)send(`${x} ${y} ${nx} ${ny}`),vx=nx,vy=ny
+    //   character render
+    x+=vx;y+=vy;x&=1023;y&=1023
+    a.forEach((p,i)=>{
+      p.x+=p.vx;p.y+=p.vy;p.x&=1023
+      x>p.x-d&x<p.x+d&y>p.y-d&y<p.y+d?(p.c?0:(b=i,o=p),p.c=true):(p.c=false,p.d=0)//p.c=collision debounce, p.d=challenge counter
+    })
+    e++
+  }
 
-  a.forEach((p,i)=>{
-    // D('p=',p)
-    p.x+=p.vx;p.y+=p.vy;p.x&=1023;r(p.x,p.y,i+' '+p.n)
-  })
+  //render
+  const r=(x,y,p)=>{c.fillStyle='#000';c.fillRect(x*m,y*m,d*m,d*m);c.fillText(JSON.stringify(p),(x+d+3)*m,(y+d)*m)}
+  r(x,y,u);a.forEach(p=>r(p.x,p.y,p))
 
   // next frame
   requestAnimationFrame(f)
-})
-
-ws.addEventListener('open',e=>{
-  if(!u?.n){u.n=prompt('Enter your name');localStorage.setItem('u',JSON.stringify(u))}
-  ws.send(`n ${x} ${y} ${nx} ${ny} ${u.n}`)
 })
 </script>
 </html>
