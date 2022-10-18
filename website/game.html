@@ -1,6 +1,6 @@
 <!-- <html style="background-color:#532;position:fixed;width:100%;height:100%;top:0"> -->
-  <html>
-    <head>
+<html>
+<head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <style>
     html,body{width:100%;height:100%}
@@ -9,13 +9,16 @@
     .hand{font-size:200%}
   </style>
 </head>
-  <body style="margin:0;background-color:#44a;font-family:sans-serif">
+<body style="margin:0;background-color:#44a;font-family:sans-serif">
+  <div style="position:relative">
     <canvas style="width:1024px;height:512px"></canvas>
-  <div id="alert" style="display:none;position:absolute;width:auto;background-color:#fff;border-radius:12px;overflow:hidden;bottom:0;left:50%;transform:translate(-50%,0)">
-    <div id="msg" style="margin:18px 12px;text-align:center"></div>
-    <div id="buttons" style="border-top:1px solid #aaa">
-      <div class="a" style="display:none"><button>Ignore</button><button>Challenge</button></div>
-      <div class="b" style="display:none"><button class="hand">&#9994;</button><button class="hand">&#9995;</button><button class="hand">&#9996;</button></div>
+    <img id="network" src="image/network-error.svg" style="position:fixed;right:14px;top:11px;width:34px" />  
+    <div id="alert" style="display:none;position:absolute;width:auto;background-color:#fff;border-radius:12px;overflow:hidden;bottom:0;left:50%;transform:translate(-50%,0)">
+      <div id="msg" style="margin:18px 12px;text-align:center"></div>
+      <div id="buttons" style="border-top:1px solid #aaa">
+        <div class="a" style="display:none"><button>Ignore</button><button>Challenge</button></div>
+        <div class="b" style="display:none"><button class="hand">&#9994;</button><button class="hand">&#9995;</button><button class="hand">&#9996;</button></div>
+      </div>
     </div>
   </div>
 </body>
@@ -34,8 +37,7 @@ $$('button').forEach(e=>e.addEventListener('click',e=>{D('e=',e);send(`c ${b} ${
 
 // net code
 let ws
-// const connect=_=>{try{ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)}catch(e){D('ws error e=',e)}};send=m=>ws.OPEN==ws.readyState?ws.send(m):connect();connect()// send or reconnect
-const connect=_=>{D('ws connect');ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)};send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
+const connect=_=>{D('ws connect');ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`);D('ws=',ws)};send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
 ws.addEventListener('open',e=>{
   if(!u?.n){u.n=prompt('Enter your name');localStorage.setItem('u',JSON.stringify(u))}
   send(`j ${x} ${y} ${nx} ${ny} ${u.n}`)// join
@@ -46,27 +48,27 @@ ws.addEventListener('message',e=>{
   switch(e[1]){
     case'j':send(`n ${x} ${y} ${nx} ${ny} ${u.n}`);break// join
     case'c':p.d++;break// challenge
-    case'n':a.set(i,{x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6]});break// name
-    default:a.set(i,{x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])})// move
+    case'n':a.set(i,{...a.get(i),x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6]});break// name
+    default:a.set(i,{...a.get(i),x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])})// move
   }
 })
-ws.addEventListener('close',e=>{
-  D('ws close')
-})
-// setInterval(_=>ws.OPEN==ws.readyState?0:connect(),3e4)// keep alive every 30s
+setInterval(_=>$('#network').style.display=ws.OPEN==ws.readyState?'none':'block',1e3)
+setInterval(_=>ws.CLOSED==ws.readyState?connect():0,1e4)// keep alive every 10s
 
-// keyboard movement
+// input
+//   keyboard
 onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)ws.close()}
 onkeyup=e=>{nx=ny=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
-// mouse/touch movement
-const v=(x,y)=>{tx=(x-m/2)|0;ty=(y-m/2)|0}
+//   mouse/touch
+const v=(x,y)=>{tx=(x-d*m/2)|0;ty=(y-d*m)|0}
 C.addEventListener('mousedown',e=>v(e.offsetX,e.offsetY))
 C.addEventListener('touchstart',e=>{e=e.touches[0];v(e.offsetX,e.offsetY)})
 
+// animation
 const eps=1e3/240;let e=Date.now()/eps
 requestAnimationFrame(function f(){
   // background
-  c.fillStyle='#090';c.fillRect(0,0,c.canvas.width,c.canvas.height)
+  c.fillStyle='#070';c.fillRect(0,0,c.canvas.width,c.canvas.height)
 
   // evolve
   while(e<Date.now()/eps){
