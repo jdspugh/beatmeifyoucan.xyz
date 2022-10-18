@@ -1,0 +1,19 @@
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<style>
+/* img{height:32px;width:32px;overflow:hidden} */
+img:hover{background-color:#ddd;transform:scale(1.01,1.01);cursor:pointer}
+</style>
+</head>
+<body style="text-align:center">
+  <h1>Choose your Avatar:</h1>
+  <div></div>
+</body>
+<script>
+const D=console.log,$=e=>document.querySelector(e)
+;(async()=>{
+  $('div').innerHTML=(await(await fetch('image/avatar/0')).text()).split('\n').map(f=>`<img onclick="location='game.html?avatar=${f}'" src="image/avatar/${f}" />`).join('')
+})()
+</script>
+</html>

@@ -1,4 +1,3 @@
-<!-- <html style="background-color:#532;position:fixed;width:100%;height:100%;top:0"> -->
 <html>
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
@@ -11,44 +10,43 @@
 </head>
 <body style="margin:0;background-color:#44a;font-family:sans-serif">
   <div style="position:relative">
-    <canvas style="width:1024px;height:512px"></canvas>
+    <canvas style="width:1024px;height:512px;cursor:pointer"></canvas>
     <img id="network" src="image/network-error.svg" style="position:fixed;right:14px;top:11px;width:34px" />  
-    <div id="alert" style="display:none;position:absolute;width:auto;background-color:#fff;border-radius:12px;overflow:hidden;bottom:0;left:50%;transform:translate(-50%,0)">
+    <!-- <div id="alert" style="display:none;position:absolute;width:auto;background-color:#fff;border-radius:12px;overflow:hidden;bottom:0;left:50%;transform:translate(-50%,0)">
       <div id="msg" style="margin:18px 12px;text-align:center"></div>
       <div id="buttons" style="border-top:1px solid #aaa">
         <div class="a" style="display:none"><button>Ignore</button><button>Challenge</button></div>
         <div class="b" style="display:none"><button class="hand">&#9994;</button><button class="hand">&#9995;</button><button class="hand">&#9996;</button></div>
       </div>
-    </div>
+    </div> -->
   </div>
 </body>
 <script>
 // player p{x,y,vx,vy,n:name,c:collision debounce,d:challenge}
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log
-const m=devicePixelRatio;C=$('canvas');C.width=1024*m;C.height=512*m;c=C.getContext('2d');w=c.canvas.width/m;h=c.canvas.height/m;c.font=`${16*m}px sans-serif`
-const a=new Map,d=10
-let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{};u.u||=crypto.randomUUID(),o=null
-D('m,w,h,u',m,w,h,u)
+const C=$('canvas'),c=C.getContext('2d'),R=_=>{m=devicePixelRatio;C.width=1024*m;C.height=512*m;w=C.width/m;h=C.height/m;c.font=`bold ${14*m}px system-ui`};R()
+const a=new Map,d=32;let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,k=[],u=JSON.parse(localStorage.getItem('u'))||{};u.u||=crypto.randomUUID(),o=null
+const S=_=>localStorage.setItem('u',JSON.stringify(u))
 
-// alert
-alert=(s,r)=>{$('#msg').innerText=s;$$('#buttons>div').forEach(e=>{D('e=',e);e.style.display=r==e.classList[0]?'block':'none'});$('#alert').style.display='block'}
-// alert=(s,r)=>{}
-$$('button').forEach(e=>e.addEventListener('click',e=>{D('e=',e);send(`c ${b} ${e.target.innerText.charCodeat(0)-9994}`);$('.alert').style.display='none'}))
+// // alert
+// alert=(s,r)=>{$('#msg').innerText=s;$$('#buttons>div').forEach(e=>{D('e=',e);e.style.display=r==e.classList[0]?'block':'none'});$('#alert').style.display='block'}
+// // alert=(s,r)=>{}
+// $$('button').forEach(e=>e.addEventListener('click',e=>{D('e=',e);send(`c ${b} ${e.target.innerText.charCodeat(0)-9994}`);$('.alert').style.display='none'}))
 
 // net code
 let ws
 const connect=_=>{D('ws connect');ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`);D('ws=',ws)};send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
 ws.addEventListener('open',e=>{
-  if(!u?.n){u.n=prompt('Enter your name');localStorage.setItem('u',JSON.stringify(u))}
+  if(!u?.n){u.n=prompt('Enter your name');S()}
   send(`j ${x} ${y} ${nx} ${ny} ${u.n}`)// join
 })
 ws.addEventListener('message',e=>{
   e=e.data.split(' ')
   const i=parseInt(e[0]),p=a.get(i)
   switch(e[1]){
-    case'j':send(`n ${x} ${y} ${nx} ${ny} ${u.n}`);break// join
+    case'j':send(`n ${x} ${y} ${nx} ${ny} ${u.n} ${u.a}`);break// join
     case'c':p.d++;break// challenge
-    case'n':a.set(i,{...a.get(i),x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6]});break// name
+    case'n':const g=new Image;g.src=`image/avatar/${e[7]}`;a.set(i,{...a.get(i),x:parseInt(e[2]),y:parseInt(e[3]),vx:parseInt(e[4]),vy:parseInt(e[5]),n:e[6],a:g});break// name
     default:a.set(i,{...a.get(i),x:parseInt(e[1]),y:parseInt(e[2]),vx:parseInt(e[3]),vy:parseInt(e[4])})// move
   }
 })
@@ -60,13 +58,17 @@ setInterval(_=>ws.CLOSED==ws.readyState?connect():0,1e4)// keep alive every 10s
 onkeydown=e=>{if(e.repeat)return;tx=ty=0;k.push(e.key);if('q'==e.key)ws.close()}
 onkeyup=e=>{nx=ny=0;delete k[k.indexOf(e.key)];k=k.filter(e=>e)}
 //   mouse/touch
-const v=(x,y)=>{tx=(x-d*m/2)|0;ty=(y-d*m)|0}
+const v=(x,y)=>{tx=(x-d/2)|0;ty=(y-d)|0}
 C.addEventListener('mousedown',e=>v(e.offsetX,e.offsetY))
 C.addEventListener('touchstart',e=>{e=e.touches[0];v(e.offsetX,e.offsetY)})
 
 // animation
+u.a=(new URL(location)).searchParams.get('avatar')||u.a||'christmas-snowman-black.png';S()
+const g=new Image;g.src=`image/avatar/${u.a}`
 const eps=1e3/240;let e=Date.now()/eps
 requestAnimationFrame(function f(){
+  if(m!=devicePixelRatio)R()
+
   // background
   c.fillStyle='#070';c.fillRect(0,0,c.canvas.width,c.canvas.height)
 
@@ -79,7 +81,7 @@ requestAnimationFrame(function f(){
     //   net code
     if(vx!=nx||vy!=ny)send(`${x} ${y} ${nx} ${ny}`),vx=nx,vy=ny
     //   character render
-    x+=vx;y+=vy;x&=1023;y&=1023
+    x+=vx;y+=vy;x&=1023;y&=511
     a.forEach((p,i)=>{
       p.x+=p.vx;p.y+=p.vy;p.x&=1023
       x>p.x-d&x<p.x+d&y>p.y-d&y<p.y+d?(p.c?0:(b=i,o=p),p.c=true):(p.c=false,p.d=0)//p.c=collision debounce, p.d=challenge counter
@@ -87,9 +89,15 @@ requestAnimationFrame(function f(){
     e++
   }
 
-  //render
-  const r=(x,y,p)=>{c.fillStyle='#000';c.fillRect(x*m,y*m,d*m,d*m);c.fillText(JSON.stringify(p),(x+d+3)*m,(y+d)*m)}
-  r(x,y,u);a.forEach(p=>r(p.x,p.y,p))
+  // render
+  const r=(x,y,vx,vy,p,a)=>{
+    c.drawImage(a,(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32,0,32,32,x*m,y*m,32*m,32*m)
+    c.fillStyle='#000';c.fillText(p.n,(x+d)*m,(y+d/2)*m)
+  }
+  //   images
+  r(x,y,vx,vy,u,g);a.forEach(p=>r(p.x,p.y,p.vx,p.vy,p,p.a||g))
+  //   text
+  r(x,y,vx,vy,u,g);a.forEach(p=>r(p.x,p.y,p.vx,p.vy,p,p.a||g))
 
   // next frame
   requestAnimationFrame(f)
