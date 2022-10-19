@@ -36,7 +36,7 @@ const S=_=>localStorage.setItem('u',JSON.stringify(u))
 // net code
 let ws
 const connect=_=>{
-  D('ws connect')
+  D('ws connect u.u=',u.u)
   ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)
   D('ws=',ws)
   ws.addEventListener('open',e=>{
