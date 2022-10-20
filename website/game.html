@@ -1,5 +1,6 @@
 <html>
 <head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <style>
     html,body{width:100%;height:100%}
@@ -66,10 +67,13 @@ const v=(x,y)=>{tx=(x-d/2)|0;ty=(y-d)|0}
 C.addEventListener('mousedown',e=>v(e.offsetX,e.offsetY))
 C.addEventListener('touchstart',e=>{e=e.touches[0];v(e.offsetX,e.offsetY)})
 
+// fight
+let hi,hd;setInterval(_=>{let d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i})},100)
+
 // animation
 u.a=(new URL(location)).searchParams.get('avatar')||u.a||'christmas-snowman-black.png';S()
 const g=new Image;g.src=`image/avatar/${u.a}`
-const eps=1e3/240;let e=Date.now()/eps
+const eps=1e3/120;let e=Date.now()/eps
 requestAnimationFrame(function f(){
   if(m!=devicePixelRatio)R()
 
@@ -94,13 +98,19 @@ requestAnimationFrame(function f(){
   }
 
   // render
-  //   images (bottom layer)
-  const ri=(x,y,vx,vy,a)=>c.drawImage(a,(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32,0,32,32,x*m,y*m,32*m,32*m);ri(x,y,vx,vy,g);a.forEach(p=>ri(p.x,p.y,p.vx,p.vy,p.a||g))
-  //   text (top layer)
+  //   images (layer 1)
+  const s=32,ri=(x,y,vx,vy,a)=>c.drawImage(a,(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*s,0,s,s,x*m,y*m,s*m,s*m);ri(x,y,vx,vy,g);a.forEach(p=>ri(p.x,p.y,p.vx,p.vy,p.a||g))
+  //   text (layer 2)
   const rt=(x,y,vx,vy,p)=>{
     c.fillStyle='#000';c.fillText(p.n,(x+d)*m+m,(y+d/2)*m+m)// shadow
     c.fillStyle='#fffb';c.fillText(p.n,(x+d)*m,(y+d/2)*m)// body
   };rt(x,y,vx,vy,u);a.forEach(p=>rt(p.x,p.y,p.vx,p.vy,p))
+  //   fight (layer 3)
+  if(hd<64){
+    D('a=',a,'hi=',hi)
+    const p=a.get(hi)
+    c.fillStyle='#fff8';c.arc((x+p.x)/2|0,(y+p.y)/2|0,s,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.fillText('🤜 ? 🤛',(x+p.x)/2|0,(y+p.y)/2|0)
+  }
 
   // next frame
   requestAnimationFrame(f)
