@@ -2,17 +2,19 @@
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <style>
-img{height:32px;width:32px;object-fit:cover;object-position:0}
-img:hover{background-color:#ddd;transform:scale(1.01,1.01);cursor:pointer}
+div{display:inline;position:relative;pointer-events:none}
+div:after{background:radial-gradient(#1115 0%,#0000 59%);width:100%;height:21px;position:absolute;bottom:5px;left:0;content:'';position:absolute;border-radius:50%}
+img{pointer-events:all;cursor:pointer;height:32px;width:32px;object-fit:cover;object-position:0;margin:9px 5px;position:relative;top:0;transition:.4s}
+img:hover{position:relative;top:-6px}
 </style>
 </head>
-<body style="text-align:center">
-  <h1>Choose your Avatar:</h1>
+<body style="text-align:center;color:#fffb;background-color:#070;font-family:sans-serif">
+  <h1 style="text-shadow:3px 3px #0007">Choose your Avatar</h1>
   <div></div>
 <script>
 const D=console.log,$=e=>document.querySelector(e)
 ;(async()=>{
-  $('div').innerHTML=(await(await fetch('image/avatar/0')).text()).split('\n').map(f=>`<img onclick="location='game.html?avatar=${f}'" src="image/avatar/${f}" />`).join('')
+  $('div').innerHTML=(await(await fetch('image/avatar/0')).text()).split('\n').map(f=>`<div><img onclick="location='game.html?avatar=${f}'" src="image/avatar/${f}" /></div>`).join('')
 })()
 </script>
 </body>
