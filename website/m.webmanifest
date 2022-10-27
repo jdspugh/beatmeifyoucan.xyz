@@ -1,0 +1,11 @@
+{
+  "icons": [
+    {
+      "src": "beat-me-if-you-can-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "game.html",
+  "display": "fullscreen"
+}
