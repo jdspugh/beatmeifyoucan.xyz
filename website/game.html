@@ -17,8 +17,9 @@
     li{box-shadow:0 0 0 2px #fff4;border-radius:50%;padding:2px 7px;font-size:25px;position:relative;pointer-events:all;margin:0 4px}
     li:hover{background-color:#fff4}
     #map>*,#others>div{pointer-events:none;position:absolute;pointer-events:none;user-select:none}
-    .player img{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
     .player{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%)}
+    .player img{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
+    .player.h img{background-color:#fff8}
     .name{color:#fffa;text-shadow:1px 1px black;font-weight:bold;margin-bottom:3px}
     button{all:unset;color:#66f;width:100%;text-align:center;padding:12px;box-sizing:border-box;cursor:pointer;width:100%;text-align:center;border-bottom:1px solid #aaa}button:last-child{border-bottom:none}button:hover{background-color:#eee}
     .buttons>div{display:flex}
@@ -26,8 +27,8 @@
     #fight:hover{background-color:#fff6}
     #vs>div{display:inline;font-weight:bold}
     #v1,#v2{font-weight:bold;margin:2px 6px;font-size:16px}
-    .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:3em;overflow:scroll}
-    .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;top:23px;left:46%;position:absolute}
+    .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:1em;overflow:scroll;margin-bottom:7px}
+    .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;bottom:56px;position:absolute;left:calc(50% - 5px);}
   </style>
 </head>
 <body style="background-color:#44a;font-family:system-ui;font-size:16px;margin:0">
@@ -99,18 +100,18 @@ const init=_=>{
   onkeyup=e=>{m?0:nx=ny=0,delete k[k.indexOf(e.key)],k=k.filter(e=>e)}
   // input - mouse/touch
   const v=(x,y)=>[tx,ty]=[x|0,y|0]
-  em.addEventListener('click',e=>{D('mousedown e=',e);/*v(e.offsetX,e.offsetY);e.preventDefault();e.stopPropagation();return false*/},{passive:false,capture:false})
+  em.addEventListener('click',e=>{D('mousedown e=',e);v(e.offsetX,e.offsetY);e.preventDefault();e.stopPropagation();return false},{passive:false,capture:false})
   em.addEventListener('touchstart',e=>{D('touchstart e=',e);e=e.touches[0];v(e.offsetX,e.offsetY)},{passive:true,capture:false})
   // $('#fight').addEventListener('click',e=>{D('click e=',e);e.preventDefault();e.stopPropagation();return false},{capture:false})
   $('#help').addEventListener('click',_=>$('#help-content').style.display='flex');$('#help-content').addEventListener('click',_=>$('#help-content').style.display='none')
   $('#profile').addEventListener('click',_=>location='avatar.html')
 
   // fight
-  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi)$('#v1').innerText=u.n,$('#v2').innerText=a.get(hi).n;const vs=hd<128?1:0;$('#vs').style.opacity=vs;D('o,hi=',o,hi);o&&(o!=hi||!vs)?$(`#p${o} img`).style.backgroundColor='':hi?$(`#p${hi} img`).style.backgroundColor='#fff8':0,o=hi},100)
+  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi)$('#v1').innerText=u.n,$('#v2').innerText=a.get(hi).n;const vs=hd<128?1:0;$('#vs').style.opacity=vs;D('o,hi=',o,hi);o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)
 
   // animation
   const r=(e,x,y,vx,vy)=>{e.style.left=`${x}px`;e.style.top=`${y}px`;e.querySelector('img').style.objectPosition=`-${(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32}px`}//;e.querySelector('.chat').style.display=e.querySelector('.chat').innerText.length?'none':'block'
-  u.a=(new URL(location)).searchParams.get('avatar')||u.a||'christmas-snowman-black.png';S()
+  u.a=(new URL(location)).searchParams.get('avatar')||u.a||'halloween-mummy.png';S()
   $('#you img').src=`image/avatar/${u.a}`
   $('#you .name').innerText=u.n
   const eps=1e3/240;let e=Date.now()/eps
