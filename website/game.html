@@ -13,12 +13,14 @@
     p{color:#fff;font-weight:bold}
     nav>img{height:20px;margin:6px 8px}
     nav>img:hover{background-color:#fff4;border-radius:50%}
-    ul{list-style:none;padding:0;margin:0;display:flex}
-    li{box-shadow:0 0 0 2px #fff4;border-radius:50%;padding:2px 7px;font-size:25px;position:relative;pointer-events:all;margin:0 4px}
+    #network.h{background:url(image/network-error.svg)}
+    ul{list-style:none;padding:0;margin:0;display:flex;transform:translateX(-104%);position:absolute}
+    @keyframes ap{0%,100%{box-shadow:0 0 0 2px #fff2}50%{box-shadow:0 0 0 2px #fff6}}
+    li{animation:ap 1s infinite;border-radius:50%;padding:2px 7px;font-size:25px;position:relative;pointer-events:all;margin:0 4px}
     li:hover{background-color:#fff4}
     #map>*,#others>div{pointer-events:none;position:absolute;pointer-events:none;user-select:none}
     .player{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%)}
-    .player img{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
+    .player img,#i1,#i2{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
     .player.h img{background-color:#fff8}
     .name{color:#fffa;text-shadow:1px 1px black;font-weight:bold;margin-bottom:3px}
     button{all:unset;color:#66f;width:100%;text-align:center;padding:12px;box-sizing:border-box;cursor:pointer;width:100%;text-align:center;border-bottom:1px solid #aaa}button:last-child{border-bottom:none}button:hover{background-color:#eee}
@@ -26,9 +28,13 @@
     .hand{font-size:200%}
     #fight:hover{background-color:#fff6}
     #vs>div{display:inline;font-weight:bold}
+    /* #a1{transform:scale(1,-1) rotate(90deg)}#a2{transform:rotate(90deg)} */
+    #a1{transform:rotate(90deg) scale(-1,1)}#a2{transform:rotate(-90deg)}
+    #a1,#a2{width:19px;filter:drop-shadow(-1px 1px 0 #000);font-size:24px}
+    .aw{animation:aw 1.5s infinite}@keyframes aw{0%,20%,40%,60%,100%{transform:rotate(-20deg)}10%,30%,50%{transform:rotate(20deg)}}
     #v1,#v2{font-weight:bold;margin:2px 6px;font-size:16px}
     .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:1em;overflow:scroll;margin-bottom:7px}
-    .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;bottom:56px;position:absolute;left:calc(50% - 5px);}
+    .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;bottom:56px;position:absolute;left:calc(50% - 5px)}
   </style>
 </head>
 <body style="background-color:#44a;font-family:system-ui;font-size:16px;margin:0">
@@ -39,9 +45,17 @@
       <img id="profile" src="image/user-circle.svg" style="pointer-events:all" />
     </nav>
     <div id="others" class="player"></div>
-    <div id="vs" style="opacity:0;transition:.15s;position:fixed;bottom:5px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center">
-      <div style="color:#000;background-color:#fff;border-radius:99px;padding:4px 6px;width:fit-content;font-weight:normal;display:flex;font-size:12px;align-items:center"><div id="v1"></div>vs<div id="v2"></div></div>
+    <div id="vs" style="opacity:0;transition:.15s;position:fixed;bottom:5px;left:50%;transform:translateX(-50%);display:flex;align-items:center">
       <ul><li>✊</li><li>✋</li><li>✌️</li></ul>
+      <div style="color:#000;background-color:#fff;border-radius:99px;padding:4px 6px;width:fit-content;font-weight:normal;display:flex;font-size:12px;align-items:center">
+        <img id="i1" />
+        <div id="a1"><div class="aw">✊</div></div>
+        <div id="v1"></div>
+        <div>vs</div>
+        <div id="v2"></div>
+        <div id="a2"><div class="aw">✊</div></div>
+        <img id="i2" />
+      </div>
     </div>
     <div id="help-content" onclick="this.style.display='none'" style="background-color:#070d;position:fixed;width:100%;height:100%;color:#fff;pointer-events:all;padding:12px;box-sizing:border-box;left:0;display:flex;justify-content:center;overflow:scroll">
       <div style="max-width:400px;text-align:center;height:fit-content">
@@ -68,7 +82,7 @@ const init=_=>{
   // player nodes
   const tp=(i,n,f)=>`<div id="${i}" class="player"><div class="chat"></div><img src="image/avatar/${f}" /><div class="name">${n}</div></div></div>`// player template
   $('#others').insertAdjacentHTML('afterend',tp('you',u.n,u.a))// you
-  const add=(i,n,f)=>{if(!a.has(i))$('#others').insertAdjacentHTML('beforeend',tp(`p${i}`,n,f))}// others
+  const add=(i,n,f)=>{D('add() i,n,f,a=',i,n,f,a);if(!a.has(i))$('#others').insertAdjacentHTML('beforeend',tp(`p${i}`,n,f))}// others
 
   // cached dom elements
   const em=$('#map'),ey=$('#you'),ec=$('#you .chat')
@@ -85,32 +99,34 @@ const init=_=>{
       switch(f[1]){
         case'j':send(`n ${x} ${y} ${nx} ${ny} ${u.n} ${u.a}`);add(i,f[6],f[7]);a.set(i,{...a.get(i),x:parseInt(f[2]),y:parseInt(f[3]),vx:parseInt(f[4]),vy:parseInt(f[5]),n:f[6]});break// join
         case'c':p.d++;break// challenge
-        case'n':add(i,f[6],f[7]);a.set(i,{...a.get(i),x:parseInt(f[2]),y:parseInt(f[3]),vx:parseInt(f[4]),vy:parseInt(f[5]),n:f[6]});break// name
+        case'n':add(i,f[6],f[7]);a.set(i,{...a.get(i),x:parseInt(f[2]),y:parseInt(f[3]),vx:parseInt(f[4]),vy:parseInt(f[5]),n:f[6],a:f[7]});break// name
         case'm':const l=$(`#p${i} .chat`);l.innerText=d.substr(d.indexOf('m')+2);l.style.display=l.innerText?'block':'none';break// message
         default:add(i);a.set(i,{...a.get(i),x:parseInt(f[1]),y:parseInt(f[2]),vx:parseInt(f[3]),vy:parseInt(f[4])})// move
       }
     },{passive:true})
   },send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
-  setInterval(_=>$('#network').src=`image/${ws.OPEN==ws.readyState?'wifi':'network-error'}.svg`,1e3)
+  setInterval(_=>$('#network').classList[ws.OPEN==ws.readyState?'remove':'add']('h'),1e3)
   setInterval(_=>ws.CLOSED==ws.readyState?connect():0,1e4)// keep alive every 10s
 
-  // input - keyboard
+  // input
+  //   keyboard
   let k=[],m=false// mode false=play,true=chat
   onkeydown=e=>{if('Enter'==e.key){!m&&ec.innerText.length>0?ec.innerText='':m=!m,!m?send(`m ${ec.innerText}`):0}m?(ec.focus()):e.repeat?0:(tx=ty=0,k.push(e.key));ec.style.display=(m||ec.innerText.length)?'block':'none';ec.contentEditable=m}
   onkeyup=e=>{m?0:nx=ny=0,delete k[k.indexOf(e.key)],k=k.filter(e=>e)}
-  // input - mouse/touch
+  //   mouse/touch
   const v=(x,y)=>[tx,ty]=[x|0,y|0]
   em.addEventListener('click',e=>{D('mousedown e=',e);v(e.offsetX,e.offsetY);e.preventDefault();e.stopPropagation();return false},{passive:false,capture:false})
   em.addEventListener('touchstart',e=>{D('touchstart e=',e);e=e.touches[0];v(e.offsetX,e.offsetY)},{passive:true,capture:false})
-  // $('#fight').addEventListener('click',e=>{D('click e=',e);e.preventDefault();e.stopPropagation();return false},{capture:false})
   $('#help').addEventListener('click',_=>$('#help-content').style.display='flex');$('#help-content').addEventListener('click',_=>$('#help-content').style.display='none')
   $('#profile').addEventListener('click',_=>location='avatar.html')
+  // $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';$('ul').style.display='none';e.target.innerText.codePointAt(0)-9994;e.stopPropagation()}))
+  $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';$('ul').style.display='none';$('#a1>div').innerText=e.target.innerText;$('#a1>div').classList.remove('aw');e.stopPropagation()}))
 
   // fight
-  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi)$('#v1').innerText=u.n,$('#v2').innerText=a.get(hi).n;const vs=hd<128?1:0;$('#vs').style.opacity=vs;D('o,hi=',o,hi);o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)
+  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi!=o)$('#v1').innerText=u.n,$('#v2').innerText=a.get(hi).n,$('#i1').src=`image/avatar/${u.a}`,$('#i2').src=`image/avatar/${a.get(hi).a}`;const vs=hd<128?1:0;$('#vs').style.opacity=vs;o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)
 
   // animation
-  const r=(e,x,y,vx,vy)=>{e.style.left=`${x}px`;e.style.top=`${y}px`;e.querySelector('img').style.objectPosition=`-${(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32}px`}//;e.querySelector('.chat').style.display=e.querySelector('.chat').innerText.length?'none':'block'
+  const r=(e,x,y,vx,vy)=>{e.style.left=`${x}px`;e.style.top=`${y}px`;e.querySelector('img').style.objectPosition=`-${(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32}px`}
   u.a=(new URL(location)).searchParams.get('avatar')||u.a||'halloween-mummy.png';S()
   $('#you img').src=`image/avatar/${u.a}`
   $('#you .name').innerText=u.n
@@ -135,19 +151,6 @@ const init=_=>{
 
     // render players
     r(ey,x,y,vx,vy);a.forEach((p,i)=>r($(`#p${i}`),p.x,p.y,p.vx,p.vy))
-    // render fight
-    // const vs=hd<128?1:0
-    // vs?document.getAnimations()[0].play():document.getAnimations()[0].pause()
-    // $('#vs').style.opacity=vs
-    // $('#you>ul').style.opacity=vs
-    // if(hi){
-    //   $('#vs').innerText=`${u.n} vs ${a.get(hi).n}`
-    //   $(`#others p${hi}`).style.border='2px solid #fff4'
-    // //   // D(a,hi,a.get(hi))
-    // //   $('#vs').style.left=`${(x+a.get(hi).x)/2}px`
-    // //   $('#vs').style.top=`${(y+a.get(hi).y)/2}px`
-    // }
-    // scrollTo(x,y)
 
     // next frame
     requestAnimationFrame(f)
