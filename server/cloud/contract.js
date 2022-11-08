@@ -1,5 +1,5 @@
-export const CONTRACT={
-  address:'0x530A627CcFa29C5A14104d7161Bf9cC5BF33d088',
+const CONTRACT={
+  address:'0xedE3C0BC7bf1fEEa0D2fe177486E68f27fD12704',
   abi:[
     {
       "inputs": [
@@ -32,14 +32,27 @@ export const CONTRACT={
     {
       "inputs": [
         {
+          "internalType": "uint32",
+          "name": "n",
+          "type": "uint32"
+        }
+      ],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "uint256",
           "name": "n",
           "type": "uint256"
         },
         {
-          "internalType": "bytes32",
-          "name": "encryptedMoves",
-          "type": "bytes32"
+          "internalType": "uint16",
+          "name": "moves",
+          "type": "uint16"
         }
       ],
       "name": "close",
@@ -113,30 +126,7 @@ export const CONTRACT={
           "type": "uint144"
         }
       ],
-      "name": "revealClose",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "n",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint16",
-          "name": "moves",
-          "type": "uint16"
-        },
-        {
-          "internalType": "uint144",
-          "name": "salt",
-          "type": "uint144"
-        }
-      ],
-      "name": "revealOpening",
+      "name": "reveal",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -158,6 +148,11 @@ export const CONTRACT={
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "WinAlreadyClaimed",
+      "type": "error"
     },
     {
       "anonymous": false,
@@ -208,11 +203,6 @@ export const CONTRACT={
         {
           "internalType": "bytes32",
           "name": "me1",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "me2",
           "type": "bytes32"
         },
         {
