@@ -16,13 +16,14 @@
     #network.h{background:url(image/network-error.svg)}
     ul{list-style:none;padding:0;margin:0;display:none;position:absolute;bottom:14px}
     #you.h ul{display:flex}
-    li{background-color:#fff3;border-radius:50%;padding:2px 7px;font-size:25px;position:relative;pointer-events:all;margin:0 4px}
+    li{background-color:#fff3;border-radius:50%;padding:2px 7px;font-size:25px;position:relative;pointer-events:all;margin:0 4px;text-shadow:0 1px 3px #000}
+    li.h,li:hover{background-color:#fffd}
     li:nth-child(2n+1){top:-17px}li:nth-child(1){left:10px}li:nth-child(2){top:-44px}li:nth-child(3){right:9px}
-    li:hover{background-color:#fff7}
     #map>*,#others>div{pointer-events:none;position:absolute;pointer-events:none;user-select:none}
     .player{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%)}
+    .player img{position:absolute;bottom:11px;padding:10px}
     .player img,#i1,#i2{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
-    .player.h img{background-color:#fff8}
+    .player.h img{background-color:#fff4}
     .name{color:#fffa;text-shadow:1px 1px black;font-weight:bold;margin-bottom:3px;white-space:nowrap}
     button{all:unset;color:#66f;width:100%;text-align:center;padding:12px;box-sizing:border-box;cursor:pointer;width:100%;text-align:center;border-bottom:1px solid #aaa}button:last-child{border-bottom:none}button:hover{background-color:#eee}
     .buttons>div{display:flex}
@@ -34,7 +35,7 @@
     #a1,#a2{width:19px;filter:drop-shadow(-1px 1px 0 #000);font-size:24px}
     .aw{animation:aw 1.5s infinite}@keyframes aw{0%,20%,40%,60%,100%{transform:rotate(-20deg)}10%,30%,50%{transform:rotate(20deg)}}
     #v1,#v2{font-weight:bold;margin:2px 6px;font-size:16px}
-    .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:1em;overflow:scroll;margin-bottom:7px}
+    .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:1em;overflow:scroll;margin-bottom:40px}
     .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;bottom:56px;position:absolute;left:calc(50% - 5px)}
   </style>
 </head>
@@ -74,7 +75,7 @@ const init=_=>{
   // players
   const tp=(i,n,f)=>`<div id="${i}" class="player"><div class="chat"></div><ul><li>✊</li><li>✋</li><li>✌️</li></ul><img src="image/avatar/${f}" /><div class="name">${n}</div></div></div>`// player template
   $('#others').insertAdjacentHTML('afterend',tp('you',u.n,u.a))// you
-  const P=(i,n,f)=>{D('P() i,n,f,a=',i,n,f,a);if(!a.has(i))$('#others').insertAdjacentHTML('beforeend',tp(`p${i}`,`${i} ${n}`,f))}// others
+  const P=(i,n,f)=>{D('P() i,n,f,a=',i,n,f,a);if(!a.has(i))$('#others').insertAdjacentHTML('beforeend',tp(`p${i}`,n,f))}// others
 
   // notifications
   const N=_=>$('#notifications').insertAdjacentHTML('beforeend',`
@@ -126,7 +127,7 @@ const init=_=>{
   $('#help').addEventListener('click',_=>$('#help-content').style.display='flex');$('#help-content').addEventListener('click',_=>$('#help-content').style.display='none')
   $('#profile').addEventListener('click',_=>location='avatar.html')
   // $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';$('ul').style.display='none';e.target.innerText.codePointAt(0)-9994;e.stopPropagation()}))
-  $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';$('ul').style.display='none';$('#a1>div').innerText=e.target.innerText;send(`r ${o} ${e.target.innerText.codePointAt(0)-9994}`);$('#a1>div').classList.remove('aw');$('#you ul').style.display='none';N();e.stopPropagation()}))
+  $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';/*$('ul').style.display='none';*/$('#a1>div').innerText=e.target.innerText;send(`r ${o} ${e.target.innerText.codePointAt(0)-9994}`);$$('li').forEach(l=>l.classList.remove('h'));e.target.classList.add('h');/*('#a1>div').classList.remove('aw');*//*$('#you ul').style.display='none';*//*N();*/e.stopPropagation()}))
 
   // fight
   let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi!=o)N(),/*$('#v1').innerText=u.n,*/$('#v2').innerText=a.get(hi).n/*.$('#i1').src=`image/avatar/${u.a}`,$('#i2').src=`image/avatar/${a.get(hi).a}`*/;const vs=hd<128?1:0;/*if(!vs)$('#you ul').style.display='none';*//*$('#vs').style.opacity=vs*/;o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)

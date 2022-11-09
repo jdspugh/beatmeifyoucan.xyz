@@ -3,14 +3,14 @@ import {Player} from './player.mjs'
 const D = console.log
 
 export class Players {
-  /** @type {number} */ static #n = 1// session count
+  /** @type {SessionId} */ static #n = 1// session count
 
-  /** @type {Object<string,Player>} */ static #kp = {}// player key -> player
-  /** @type {Map<number,string>} */ static #sk = new Map// player session id -> player key
+  /** @type {Object<Key,Player>} */ static #kp = {}// player key -> player
+  /** @type {Map<SessionId,Key>} */ static #sk = new Map// player session id -> player key
 
   /**
-   * @param {string} playerKey
-   * @return {number|null}
+   * @param {Key} playerKey
+   * @return {SessionId|null}
    */ 
   static getSessionId(playerKey) {
     const p = this.#kp[playerKey]
@@ -18,25 +18,27 @@ export class Players {
   }
 
   /**
-   * @return {number}
+   * @return {SessionId}
    */ 
    static newSessionId() {
     return this.#n++
   }
 
   /**
-   * @param {string} key 
-   * @param {number} sessionId 
+   * @param {any} wsSession 
+   * @param {Key} key 
+   * @param {SessionId} sessionId 
    * @param {Player} player
    */ 
-  static addPlayer(key, sessionId, player) {
+  static addPlayer(wsSession, key, sessionId, player) {
+    player.wsSession = wsSession
     player.sessionId = sessionId
     this.#kp[key] = player
     this.#sk.set(sessionId, key)
   }
 
   /**
-   * @param {number} playerSessionId
+   * @param {SessionId} playerSessionId
    * @return {Player}
    */ 
   static getPlayer(playerSessionId) {
@@ -55,9 +57,12 @@ export class Players {
   }
 
   /**
-   * @return {void}
+   * @param {number} numberOfclients
+   * @return {string}
    */ 
-  static dump() {
-    D('Players.dump() n=',this.#n,'sk=',this.#sk,'kp=',this.#kp)
+  static dump(numberOfclients) {
+    let s = `\nPLAYERS (${numberOfclients} ws sessions)\nSESSION ID\tNAME\tATTACK\t\tOPPONENT\n`+'\x1b[90m'
+    this.#sk.forEach((key,sessionId)=>s+=this.#kp[key]+'\n')
+    return s+'\x1b[0m'
   }
 }
