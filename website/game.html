@@ -22,19 +22,19 @@
     #map>*,#others>div{pointer-events:none;position:absolute;pointer-events:none;user-select:none}
     .player{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%)}
     .player img{position:absolute;bottom:11px;padding:10px}
-    .player img,#i1,#i2{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
+    .player img{width:32px;height:32px;width:32px;object-fit:cover;object-position:0;border-radius:50%}
     .player.h img{background-color:#fff4}
     .name{color:#fffa;text-shadow:1px 1px black;font-weight:bold;margin-bottom:3px;white-space:nowrap}
     button{all:unset;color:#66f;width:100%;text-align:center;padding:12px;box-sizing:border-box;cursor:pointer;width:100%;text-align:center;border-bottom:1px solid #aaa}button:last-child{border-bottom:none}button:hover{background-color:#eee}
     .buttons>div{display:flex}
     .hand{font-size:200%}
     #fight:hover{background-color:#fff6}
-    #vs>div{display:inline;font-weight:bold}
-    /* #a1{transform:scale(1,-1) rotate(90deg)}#a2{transform:rotate(90deg)} */
+    #vs{margin-bottom:2px;display:flex;justify-content:right}
+    #vs>div{color:#000;background-color:#fff6;border-radius:99px;padding:3px 15px;width:fit-content;display:flex;font-size:12px;align-items:center;transform:scale(.9);transform-origin:right}
     #a1{transform:rotate(90deg) scale(-1,1)}#a2{transform:rotate(-90deg)}
-    #a1,#a2{width:19px;filter:drop-shadow(-1px 1px 0 #000);font-size:24px}
+    #a1,#a2{width:22px;font-size:24px}
     .aw{animation:aw 1.5s infinite}@keyframes aw{0%,20%,40%,60%,100%{transform:rotate(-20deg)}10%,30%,50%{transform:rotate(20deg)}}
-    #v1,#v2{font-weight:bold;margin:2px 6px;font-size:16px}
+    #v1,#v2{font-weight:bold;margin:2px 6px;font-size:16px;color:#fff}
     .chat{display:none;font-size:14px;color:#fff;background-color:#000;padding:3px 8px;border-radius:9px;width:max-content;max-width:14em;min-width:1em;overflow:scroll;margin-bottom:40px}
     .chat:after{content:'';border-top:5px solid #000;border-left:5px solid #0000;border-right:5px solid #0000;bottom:56px;position:absolute;left:calc(50% - 5px)}
   </style>
@@ -48,8 +48,8 @@
     <img id="help" src="image/question-circle.svg" style="pointer-events:all" />
     <img id="profile" src="image/user-circle.svg" style="pointer-events:all" />
   </nav>
-  <aside style="position:fixed;top:5px;right:7px">
-    <div id="notifications"></div>
+  <aside style="position:fixed;top:0;right:4px;overflow-y:scroll;height:100vh;background-color:#0001">
+    <div id="notifications" style="margin:1em 0"></div>
   </aside>
   <div id="help-content" onclick="this.style.display='none'" style="background-color:#070d;position:fixed;width:100%;height:100%;color:#fff;pointer-events:all;padding:12px;box-sizing:border-box;left:0;top:0;display:flex;justify-content:center;overflow:scroll">
     <div style="max-width:400px;text-align:center;height:fit-content">
@@ -64,10 +64,10 @@
   </div>
 </body>
 <script>
-// player{x,y,vx,vy,n:name,a:avatar filename,c:collision debounce,d:challenge}
+// player{x,y,vx,vy,n:name,a:avatar filename,c:collision debounce,d:challenge} //TODO:Do we need c & d still?
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s),D=console.log// util
 const w=1024,h=512,d=32// pixels
-const a=new Map;let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null// players & movement
+const a=new Map;let x=w/2|0,y=h/2|0,nx=ny=vx=vy=0,tx=ty=null,s// players & movement, a=Map<PlayerSessionId,Player>, s=<your session id>
 const u=JSON.parse(localStorage.getItem('u'))||{};u.u||=crypto.randomUUID(),S=_=>localStorage.setItem('u',JSON.stringify(u))// auth/cookie
 
 // init
@@ -78,37 +78,37 @@ const init=_=>{
   const P=(i,n,f)=>{D('P() i,n,f,a=',i,n,f,a);if(!a.has(i))$('#others').insertAdjacentHTML('beforeend',tp(`p${i}`,n,f))}// others
 
   // notifications
-  const N=_=>$('#notifications').insertAdjacentHTML('beforeend',`
+  const N=(s1,a1,s2,a2)=>{const m=['✊','✋','✌️'];if(s==s2)[s1,a1,s2,a2]=[s2,a2,s1,a1];const p1=s==s1?u:a.get(s1),p2=s==s2?u:a.get(s2);$('#notifications').insertAdjacentHTML('afterbegin',`
 <div id="vs">
-  <div style="color:#000;background-color:#fff;border-radius:99px;padding:4px 6px;width:fit-content;font-weight:normal;display:flex;font-size:12px;align-items:center">
-    <img id="i1" />
-    <div id="a1"><div>?</div></div>
-    <div id="v1"></div>
-    <div>vs</div>
-    <div id="v2"></div>
-    <div id="a2"><div>?</div></div>
-    <img id="i2" />
+  <div>
+    <div id="a1"><div>${m[a1]}</div></div>
+    <div id="v1">${p1.n}</div>
+    <div>beat</div>
+    <div id="v2">${p2.n}</div>
+    <div id="a2"><div>${m[a2]}</div></div>
   </div>
-</div>`)
+</div>`)}
 
   // cache dom elements
   const em=$('#map'),ey=$('#you'),ec=$('#you .chat')
 
   // net code
+  const I=parseInt
   let ws
   const connect=_=>{
     D('ws connect u.u=',u.u)
     ws=new WebSocket(`wss://${location.host}/wss/${u.u||crypto.randomUUID()}`)
     D('ws=',ws)
-    ws.addEventListener('open',e=>{if(!u?.n){u.n=prompt('Enter your name').replaceAll(' ','-');S()};send(`j ${x} ${y} ${nx} ${ny} ${u.n} ${u.a}`)},{passive:true})
+    ws.addEventListener('open',e=>{if(!u?.n){u.n=prompt('Enter your name (up to 12 characters)');S()};send(`j ${x} ${y} ${nx} ${ny} ${u.n} ${u.a}`)},{passive:true})
     ws.addEventListener('message',e=>{
-      const d=e.data,f=d.split(' '),i=parseInt(f[0]),p=a.get(i)
+      const d=e.data,f=d.split(' '),i=I(f[0]),p=a.get(i)
       switch(f[1]){
-        case'j':/*send(`n ${x} ${y} ${nx} ${ny} ${u.n} ${u.a}`);*/P(i,f[6],f[7]);a.set(i,{...a.get(i),x:parseInt(f[2]),y:parseInt(f[3]),vx:parseInt(f[4]),vy:parseInt(f[5]),n:f[6]});break// join
+        case'J':case'j':P(i,f[6],f[7]);a.set(i,{...a.get(i),x:I(f[2]),y:I(f[3]),vx:I(f[4]),vy:I(f[5]),n:f[6],a:f[7]});break// join
         case'c':p.d++;break// challenge
-        // case'n':P(i,f[6],f[7]);a.set(i,{...a.get(i),x:parseInt(f[2]),y:parseInt(f[3]),vx:parseInt(f[4]),vy:parseInt(f[5]),n:f[6],a:f[7]});break// name
         case'm':const l=$(`#p${i} .chat`);l.innerText=d.substr(d.indexOf('m')+2);l.style.display=l.innerText?'block':'none';break// message
-        default:P(i);a.set(i,{...a.get(i),x:parseInt(f[1]),y:parseInt(f[2]),vx:parseInt(f[3]),vy:parseInt(f[4])})// move
+        case'R':$$('li').forEach(l=>l.classList.remove('h'));N(I(f[2]),I(f[3]),I(f[4]),I(f[5]));break// results
+        case'Y':s=i;u.n=f[2];break// retrieve your sessoin id
+        default:P(i);a.set(i,{...a.get(i),x:I(f[1]),y:I(f[2]),vx:I(f[3]),vy:I(f[4])})// move
       }
     },{passive:true})
   },send=m=>ws.OPEN==ws.readyState?ws.send(m):ws.CLOSED==ws.readyState?connect():0;connect()// send or reconnect
@@ -127,10 +127,10 @@ const init=_=>{
   $('#help').addEventListener('click',_=>$('#help-content').style.display='flex');$('#help-content').addEventListener('click',_=>$('#help-content').style.display='none')
   $('#profile').addEventListener('click',_=>location='avatar.html')
   // $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';$('ul').style.display='none';e.target.innerText.codePointAt(0)-9994;e.stopPropagation()}))
-  $$('li').forEach(l=>l.addEventListener('click',e=>{$('#a1').style.visibility='visible';/*$('ul').style.display='none';*/$('#a1>div').innerText=e.target.innerText;send(`r ${o} ${e.target.innerText.codePointAt(0)-9994}`);$$('li').forEach(l=>l.classList.remove('h'));e.target.classList.add('h');/*('#a1>div').classList.remove('aw');*//*$('#you ul').style.display='none';*//*N();*/e.stopPropagation()}))
+  $$('li').forEach(l=>l.addEventListener('click',e=>{/*$('#a1').style.visibility='visible';*//*$('ul').style.display='none';*//*$('#a1>div').innerText=e.target.innerText;*/send(`r ${o} ${e.target.innerText.codePointAt(0)-9994}`);$$('li').forEach(l=>l.classList.remove('h'));e.target.classList.add('h');/*('#a1>div').classList.remove('aw');*//*$('#you ul').style.display='none';*//*N();*/e.stopPropagation()}))
 
   // fight
-  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi!=o)N(),/*$('#v1').innerText=u.n,*/$('#v2').innerText=a.get(hi).n/*.$('#i1').src=`image/avatar/${u.a}`,$('#i2').src=`image/avatar/${a.get(hi).a}`*/;const vs=hd<128?1:0;/*if(!vs)$('#you ul').style.display='none';*//*$('#vs').style.opacity=vs*/;o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)
+  let o;setInterval(_=>{let hi,hd,d,c=Infinity;a.forEach((p,i)=>{d=Math.hypot(p.x-x,p.y-y);if(d<c)c=d,hd=d,hi=i});if(hi!=o)/*N(),*//*$('#v1').innerText=u.n,*//*$('#v2').innerText=a.get(hi).n*//*.$('#i1').src=`image/avatar/${u.a}`,$('#i2').src=`image/avatar/${a.get(hi).a}`*/;const vs=hd<128?1:0;/*if(!vs)$('#you ul').style.display='none';*//*$('#vs').style.opacity=vs*/;o&&(o!=hi||!vs)?($(`#p${o}`).classList.remove('h'),$('#you').classList.remove('h')):hi?($(`#p${hi}`).classList.add('h'),$('#you').classList.add('h')):0,o=hi},100)
 
   // animation
   const R=(e,x,y,vx,vy)=>{e.style.left=`${x}px`;e.style.top=`${y}px`;e.querySelector('img').style.objectPosition=`-${(0==vx?[6,0,0][vy+1]:[3,0,9][vx+1])*32}px`}
