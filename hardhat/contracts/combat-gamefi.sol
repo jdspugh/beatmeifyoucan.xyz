@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 
 contract Combat {
     // consts
-    uint16 constant EMPTY_MOVE = 0xffff;
+    uint16 constant EMPTY_MOVE = 0xffff;// RRRRRR=0, PPPPPP=0x555
     //bytes32 constant EMPTY_ENCRYPTED_MOVE = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
     bytes16 constant EMPTY_ENCRYPTED_MOVE = 0x00000000000000000000000000000000;
 
@@ -30,7 +30,13 @@ contract Combat {
     uint32 private duration = 30*60;// 30min. maximum game duration (seconds) after which it expires and players can claim their money
 
     // events
-    event Update(uint256 n);//TODO: make anonymous in production;
+    // event Update(uint256 n);//TODO: make anonymous in production;
+    event Open(uint256 n, uint8 r, address targetPlayer);
+    event Close(uint256 n, uint16 moves);
+    event Reveal(uint256 n, uint16 moves);
+    event Claim(uint256 n);
+    event Cancel(uint256 n);
+    event Duration(uint16 d);
 
     // errors
     error ChooseOpenGame();
@@ -47,13 +53,14 @@ contract Combat {
     error WinAlreadyClaimed();
     error WaitForExpirey();
 
-    // ERC20
+    // ERC20 Begin
     string public constant name = "Rock Paper Scissors";
     string public constant symbol = "RPS";
     uint8 public constant decimals = 18;
     mapping(address => uint256) balances;
     mapping(address => mapping (address => uint256)) allowed;
     uint256 totalSupply_ = 0;
+    // ERC20 End
 
     constructor() {
         deployer=msg.sender;
@@ -68,7 +75,7 @@ contract Combat {
             a1:msg.sender, a2:targetPlayer, d:duration,
             m1:EMPTY_MOVE, m2:EMPTY_MOVE, r:r
         });
-        emit Update(n);
+        emit Open(n,r,targetPlayer);
     }
 
     function log10(uint256 x) private pure returns(uint8) {
@@ -101,7 +108,7 @@ contract Combat {
         H[n].t = uint40(block.timestamp);
         H[n].m2 = moves;
         H[n].a2 = msg.sender;
-        emit Update(n);
+        emit Close(n,moves);
     }
 
     function reveal(uint256 n,uint16 moves,uint144 salt) external {
@@ -142,7 +149,7 @@ contract Combat {
             // win
             payable(w1>w2 ? H[n].a1 : H[n].a2).transfer(z*195/100);
         }
-        emit Update(n);
+        emit Reveal(n,moves);
     }
 
     // closer can force a winning claim after a certain duration since their moves are revealed and P1 could be stalling
@@ -159,7 +166,7 @@ contract Combat {
         // payable(deployer).transfer(z*5/100);
         payable(address(this)).transfer(z*5/100);
         payable(H[n].a2).transfer(z*195/100);
-        emit Update(n);
+        emit Claim(n);
     }
 
     function cancel(uint256 n) external {
@@ -169,12 +176,13 @@ contract Combat {
 
         H[n].a1 = address(0);// prevent reentrancy
         payable(a).transfer(pow10(H[n].b));
-        emit Update(n);
+        emit Cancel(n);
     }
 
     function setDuration(uint16 d) external {
         if(msg.sender!=deployer) revert MustBeDeployer();
         duration=d;
+        emit Duration(d);
     }
 
     // swap all your tokens for your share of the fees
@@ -188,39 +196,37 @@ contract Combat {
     }
 
     // ERC20 Begin
-    //
-    // TOKENOMICS
     // ----------
-    // Ethereum fees collect in this contract and are paid out in the proportion of the ERC20 tokens the withdrawer holds
+    // TOKENOMICS
+    // Ethereum betting fees collect in this contract and are paid out in the proportion of the ERC20 tokens the withdrawer holds
     // Tokens are gained by playing the game (win or loose)
     // ----------
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() external view returns (uint256) {
         return totalSupply_;
     }
-    function balanceOf(address tokenOwner) public view returns (uint256) {
+    function balanceOf(address tokenOwner) external view returns (uint256) {
         return balances[tokenOwner];
     }
-    function transfer(address receiver, uint256 numTokens) public returns (bool) {
+    function transfer(address receiver, uint256 numTokens) external returns (bool) {
         require(numTokens <= balances[msg.sender]);
         balances[msg.sender] = balances[msg.sender]-numTokens;
         balances[receiver] = balances[receiver]+numTokens;
         emit Transfer(msg.sender, receiver, numTokens);
         return true;
     }
-    function approve(address delegate, uint256 numTokens) public returns (bool) {
+    function approve(address delegate, uint256 numTokens) external returns (bool) {
         allowed[msg.sender][delegate] = numTokens;
         emit Approval(msg.sender, delegate, numTokens);
         return true;
     }
-    function allowance(address owner, address delegate) public view returns (uint) {
+    function allowance(address owner, address delegate) external view returns (uint) {
         return allowed[owner][delegate];
     }
-    function transferFrom(address owner, address buyer, uint256 numTokens) public returns (bool) {
+    function transferFrom(address owner, address buyer, uint256 numTokens) external returns (bool) {
         require(numTokens <= balances[owner]);
         require(numTokens <= allowed[owner][msg.sender]);
-
         balances[owner] = balances[owner]-numTokens;
         allowed[owner][msg.sender] = allowed[owner][msg.sender]-numTokens;
         balances[buyer] = balances[buyer]+numTokens;
