@@ -4,6 +4,9 @@
 *.service
 media/
 
+# sqlite3
+*.db
+
 # hardhat
 .env
 artifacts/
