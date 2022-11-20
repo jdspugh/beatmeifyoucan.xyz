@@ -53,15 +53,6 @@ contract Combat {
     error WinAlreadyClaimed();
     error WaitForExpirey();
 
-    // ERC20 Begin
-    string public constant name = "Rock Paper Scissors";
-    string public constant symbol = "RPS";
-    uint8 public constant decimals = 18;
-    mapping(address => uint256) balances;
-    mapping(address => mapping (address => uint256)) allowed;
-    uint256 totalSupply_ = 0;
-    // ERC20 End
-
     constructor() {
         deployer=msg.sender;
     }
@@ -135,7 +126,7 @@ contract Combat {
         }
 
         // distribute participation tokens
-        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply_+=3;
+        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply+=3;
 
         // payout
         uint256 z = pow10(H[n].b);
@@ -159,7 +150,7 @@ contract Combat {
         if (block.timestamp < H[n].t + H[n].d) revert WaitForExpirey();
     
         // distribute participation tokens
-        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply_+=3;
+        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply+=3;
 
         H[n].d=0;// only claim once (prevent reentrancy attack)
         uint256 z = pow10(H[n].b);
@@ -190,48 +181,52 @@ contract Combat {
         // burn all their tokens (before transfering eth to prevent reentrancy)
         uint256 n = balances[msg.sender];
         balances[msg.sender] = 0;
-        totalSupply_ -= n;
+        totalSupply -= n;
         // send eth in proportion to their share
-        payable(msg.sender).transfer(n/(totalSupply_+n));
+        payable(msg.sender).transfer(n/(totalSupply+n));
     }
 
-    // ERC20 Begin
+    // ERC20 Begin ---
     // ----------
     // TOKENOMICS
     // Ethereum betting fees collect in this contract and are paid out in the proportion of the ERC20 tokens the withdrawer holds
     // Tokens are gained by playing the game (win or loose)
     // ----------
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    function totalSupply() external view returns (uint256) {
-        return totalSupply_;
-    }
+    string public constant name = "Rock Paper Scissors";
+    string public constant symbol = "RPS";
+    uint8 public constant decimals = 18;
+    mapping(address => uint256) private balances;
+    mapping(address => mapping(address=>uint256)) private allowances;
+    uint256 public totalSupply = 0;
+
+    event Transfer(address indexed from, address indexed to, uint256 amount);
+    event Approval(address indexed owner, address indexed spender, uint256 amount);
     function balanceOf(address tokenOwner) external view returns (uint256) {
         return balances[tokenOwner];
     }
-    function transfer(address receiver, uint256 numTokens) external returns (bool) {
-        require(numTokens <= balances[msg.sender]);
-        balances[msg.sender] = balances[msg.sender]-numTokens;
-        balances[receiver] = balances[receiver]+numTokens;
-        emit Transfer(msg.sender, receiver, numTokens);
+    function transfer(address receiver, uint256 amount) external returns (bool) {
+        // require(amount <= balances[msg.sender]);// will underflow anyway
+        balances[msg.sender] -= amount;
+        unchecked{balances[receiver] += amount;}//allways less than total supply
+        emit Transfer(msg.sender, receiver, amount);
         return true;
     }
-    function approve(address delegate, uint256 numTokens) external returns (bool) {
-        allowed[msg.sender][delegate] = numTokens;
-        emit Approval(msg.sender, delegate, numTokens);
+    function approve(address delegate, uint256 amount) external returns (bool) {
+        allowances[msg.sender][delegate] = amount;
+        emit Approval(msg.sender, delegate, amount);
         return true;
     }
     function allowance(address owner, address delegate) external view returns (uint) {
-        return allowed[owner][delegate];
+        return allowances[owner][delegate];
     }
-    function transferFrom(address owner, address buyer, uint256 numTokens) external returns (bool) {
-        require(numTokens <= balances[owner]);
-        require(numTokens <= allowed[owner][msg.sender]);
-        balances[owner] = balances[owner]-numTokens;
-        allowed[owner][msg.sender] = allowed[owner][msg.sender]-numTokens;
-        balances[buyer] = balances[buyer]+numTokens;
-        emit Transfer(owner, buyer, numTokens);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(amount <= balances[from]);
+        require(amount <= allowances[from][msg.sender]);
+        balances[from] -= amount;
+        allowances[from][msg.sender] -= amount;
+        unchecked{balances[to] += amount;}//allways less than total supply
+        emit Transfer(from, to, amount);
         return true;
     }
-    // ERC20 End
+    // ERC20 End ---
 }

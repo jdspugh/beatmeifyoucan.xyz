@@ -1,3 +1,5 @@
+/** @typedef {import('./types.mjs').Key} Key */
+/** @typedef {import('./types.mjs').SessionId} SessionId */
 import {Player} from './player.mjs'
 
 const D = console.log
@@ -6,7 +8,7 @@ export class Players {
   /** @type {SessionId} */ static #n = 1// session count
 
   /** @type {Object<Key,Player>} */ static #kp = {}// player key -> player
-  /** @type {Map<SessionId,Key>} */ static #sk = new Map// player session id -> player key
+  /** @type {Map<SessionId,Key>} */ static sk = new Map// player session id -> player key
 
   /**
    * @param {Key} playerKey
@@ -34,7 +36,7 @@ export class Players {
     player.wsSession = wsSession
     player.sessionId = sessionId
     this.#kp[key] = player
-    this.#sk.set(sessionId, key)
+    this.sk.set(sessionId, key)
   }
 
   /**
@@ -42,7 +44,7 @@ export class Players {
    * @return {Player}
    */ 
   static getPlayer(playerSessionId) {
-    return this.#kp[this.#sk.get(playerSessionId)]
+    return this.#kp[this.sk.get(playerSessionId)]
   }
 
   /**
@@ -62,7 +64,7 @@ export class Players {
    */ 
   static dump(numberOfclients) {
     let s = `\nPLAYERS (${numberOfclients} ws sessions)\nSESSION ID\tNAME\tATTACK\t\tOPPONENT\n`+'\x1b[90m'
-    this.#sk.forEach((key,sessionId)=>s+=this.#kp[key]+'\n')
+    this.sk.forEach((key,sessionId)=>s+=this.#kp[key]+'\n')
     return s+'\x1b[0m'
   }
 }

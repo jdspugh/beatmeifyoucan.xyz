@@ -10,6 +10,8 @@ Moralis + Google Hackathon Entry
   
 ## TODO
 
+[x] PvP without Blockchain
+
 [x] Create game smartcontract
 
 [x] Frontend - Wallet connect
@@ -28,8 +30,20 @@ Moralis + Google Hackathon Entry
 
 [ ] Frontend - Show challengers
 
+[ ] Frontend - Save salts
+
 [x] Backend - Colate smartcontract events
 
 [x] Backend - Colate games into Moralis DB
 
 [x] Backend - Provide API to frontend
+
+## Deployment
+
+### New Smart Contract
+
+1. cloud/contract.js
+    * replace address, abi from remix
+2. website/js/contract.js
+    * copy above file here
+3. Moralis > Servers > Settings > Syncs > Smart Contract > Add New Sync > Custom Event > Table Name: Update

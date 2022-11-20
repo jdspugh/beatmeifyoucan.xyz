@@ -24,15 +24,15 @@ const D=console.log
  * @returns {ethers.providers.BaseProvider}
  */
 export function provider(chainId) {
-  D('process.env.INFURA=',process.env.INFURA)
+  // D('process.env.INFURA=',process.env.INFURA)
   networkSymbol = NETWORKS[chainId].name.split(' ')[0]
   return ethers.getDefaultProvider(
     // NETWORKS[chainId].provider
     ethers.providers.getNetwork(chainId),
     {
-      // etherscan: process.env.ETHERSCAN,
+      etherscan: process.env.ETHERSCAN,
       infura: process.env.INFURA,
-      // alchemy: process.env.ALCHEMY,// range 88
+      alchemy: process.env.ALCHEMY,// range 88
     }
   )
 }
