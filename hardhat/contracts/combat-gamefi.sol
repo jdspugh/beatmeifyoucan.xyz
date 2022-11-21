@@ -36,7 +36,7 @@ contract Combat {
     event Reveal(uint256 n, uint16 moves);
     event Claim(uint256 n);
     event Cancel(uint256 n);
-    event Duration(uint16 d);
+    event Duration(uint32 d);
 
     // errors
     error ChooseOpenGame();
@@ -55,6 +55,7 @@ contract Combat {
 
     constructor() {
         deployer=msg.sender;
+        emit Duration(duration);
     }
 
     // set targetPlayer to address(0) to create an open game
@@ -126,7 +127,7 @@ contract Combat {
         }
 
         // distribute participation tokens
-        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply+=3;
+        distributeTokens(H[n].a1,H[n].a2);
 
         // payout
         uint256 z = pow10(H[n].b);
@@ -143,6 +144,19 @@ contract Combat {
         emit Reveal(n,moves);
     }
 
+    // distribute participation tokens
+    function distributeTokens(address a1, address a2) private {
+        totalSupply+=3;
+        unchecked{//above checked total supply is enough
+          balances[a1]++;
+          balances[a2]++;
+          balances[deployer]++;
+          emit Transfer(address(0),a1,1);
+          emit Transfer(address(0),a2,1);
+          emit Transfer(address(0),deployer,1);
+        }
+    }
+
     // closer can force a winning claim after a certain duration since their moves are revealed and P1 could be stalling
     function claim(uint32 n) external {
         if (0 == H[n].d) revert WinAlreadyClaimed();// anyone can force the claim!
@@ -150,7 +164,7 @@ contract Combat {
         if (block.timestamp < H[n].t + H[n].d) revert WaitForExpirey();
     
         // distribute participation tokens
-        balances[H[n].a1]++;balances[H[n].a2]++;balances[deployer]++;totalSupply+=3;
+        distributeTokens(H[n].a1,H[n].a2);
 
         H[n].d=0;// only claim once (prevent reentrancy attack)
         uint256 z = pow10(H[n].b);
@@ -181,9 +195,10 @@ contract Combat {
         // burn all their tokens (before transfering eth to prevent reentrancy)
         uint256 n = balances[msg.sender];
         balances[msg.sender] = 0;
-        totalSupply -= n;
+        totalSupply -= balances[msg.sender];
         // send eth in proportion to their share
         payable(msg.sender).transfer(n/(totalSupply+n));
+        emit Transfer(msg.sender,address(0),n);// sender's burnt tokens
     }
 
     // ERC20 Begin ---
@@ -201,6 +216,11 @@ contract Combat {
 
     event Transfer(address indexed from, address indexed to, uint256 amount);
     event Approval(address indexed owner, address indexed spender, uint256 amount);
+    // function mint(address receiver, uint256 amount) private pure {
+    //     totalSupply += amount;
+    //     unchecked {balances[receiver] += amount;}//safe because of the checked totalSupply above
+    //     emit Transfer(address(0), receiver, amount);
+    // }
     function balanceOf(address tokenOwner) external view returns (uint256) {
         return balances[tokenOwner];
     }
